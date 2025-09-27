@@ -35,7 +35,8 @@ This intelligent chatbot combines **document knowledge** with **real-time web se
 - **nest-asyncio** - Nested event loop support for async processing
 
 ### **Architecture**
-- **Hybrid Search Intelligence** - Automatic routing between document search, web search, and general queries
+- **Intelligent Tool Routing** - Automatic detection and routing between document search, web search, and general queries
+- **Enhanced Keyword Detection** - Expanded patterns for better query classification
 - **Polished Response Formatting** - Natural language processing of search results
 - **Session Memory** - Conversation context management
 - **JWT Authentication** - Secure user sessions
@@ -72,6 +73,8 @@ Access at `http://localhost:8000` with credentials from `.env` file.
   - Expected: Live AMZN stock price and recent performance
 - *"What's happening in tech news today?"*
   - Expected: Recent technology news and developments
+- *"What's the temperature in Tokyo?"*
+  - Expected: Current temperature and weather conditions
 
 **Conversational Memory** (references previous exchanges):
 - First: *"Tell me about Amazon's AWS business"*
@@ -90,14 +93,15 @@ Access at `http://localhost:8000` with credentials from `.env` file.
 
 ## Features
 - **OpenAI Agents SDK Integration**: Official agent framework with built-in tracing and async processing
-- **Hybrid Search Intelligence**: Automatic routing between document search, web search, and general queries
+- **Intelligent Tool Routing**: Automatic detection and routing between document search, web search, and general queries
+- **Enhanced Keyword Detection**: Expanded patterns for weather, news, financial, and document queries
 - **Polished Response Formatting**: Natural language processing of search results for human-readable answers
 - **Async Processing**: Non-blocking query processing with visual indicators using nest-asyncio
 - **Built-in Tracing**: OpenAI Agents SDK provides automatic execution tracing
 - **Multi-turn Memory**: Session-based conversation history (6 exchanges max)
 - **Content Guardrails**: Taiwan politics filtering + OpenAI moderation
-- **Real-time Web Search**: Tavily integration for current information
-- **Document Search**: ChromaDB vector search for uploaded PDFs
+- **Real-time Web Search**: Tavily integration for current information (weather, news, stock prices)
+- **Document Search**: ChromaDB vector search for uploaded PDFs (Amazon 2023 Shareholder Letter)
 - **Chainlit UI**: Web interface with authentication and OpenAI logo
 - **Persistent Storage**: ChromaDB maintains documents between sessions
 
@@ -141,10 +145,11 @@ Expected: Taiwan politics queries blocked, normal queries allowed.
 
 ## Recent Improvements (20250929)
 - ✅ **OpenAI Agents SDK Integration**: Migrated from custom agent to official OpenAI Agents SDK
-- ✅ **Fixed Import Issue**: Corrected import from `openai_agents` to `agents` 
+- ✅ **Fixed Tools Integration**: Resolved function attribute issues with intelligent tool routing
 - ✅ **Nested Event Loop Fix**: Resolved async issues with nest-asyncio
-- ✅ **Hybrid Search Architecture**: Intelligent routing between document search, web search, and general queries
+- ✅ **Intelligent Tool Routing**: Automatic detection and routing between document search, web search, and general queries
 - ✅ **Polished Responses**: Natural language formatting of search results using OpenAI
+- ✅ **Enhanced Keyword Detection**: Expanded patterns for better query classification
 - ✅ **Async Processing**: Non-blocking query processing with visual indicators
 - ✅ **Built-in Tracing**: Automatic execution tracing from OpenAI Agents SDK
 - ✅ **Enhanced UI**: Processing indicators and step-by-step execution visibility
