@@ -150,13 +150,6 @@ print("Blocked:" if is_blocked else "Allowed:", msg)
 ```
 Expected: Taiwan politics queries blocked, normal queries allowed.
 
-## Architecture
-1. **RAG Evaluation**: Check document relevance with keyword matching
-2. **Web Search Fallback**: Activate Tavily when RAG insufficient or real-time needed
-3. **Response Generation**: Prioritize web data for current info, documents for factual content
-4. **Memory Management**: Maintain conversation context across turns
-5. **Persistent Storage**: ChromaDB preserves documents between sessions
-
 ## Recent Improvements (20250929)
 - **Fixed RAG Evaluation**: Stricter keyword matching prevents irrelevant document responses
 - **Enhanced Web Search**: Properly activates when RAG content is insufficient or irrelevant
