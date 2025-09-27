@@ -1,4 +1,4 @@
-# OpenAI Agent App - 20250929
+# OpenAI Agent App with RAG & Web Search
 
 ## What This App Does
 
@@ -19,24 +19,18 @@ This intelligent chatbot combines **document knowledge** with **real-time web se
 - **Conversational Memory**: Follow-up questions that reference previous exchanges
 - **Content Safety**: Built-in guardrails for inappropriate or sensitive topics
 
-### How It Works
-1. **RAG-First**: Always searches your documents first
-2. **Smart Evaluation**: Determines if document results are sufficient
-3. **Web Augmentation**: Searches the web when documents lack relevant info
-4. **Intelligent Response**: Combines all sources for comprehensive answers
-
 ---
 
 ## Tech Stack
 
 ### **Core Framework**
 - **Python 3.x** + **Chainlit** - Chat interface framework
-- **OpenAI Agents SDK** - Agentic AI framework with built-in tracing
+- **OpenAI Agents SDK** - Official agentic AI framework with built-in tracing and async support
 - **OpenAI GPT-3.5-turbo** - Language model with moderation API
 
-### **Knowledge & Search**
-- **ChromaDB** - Vector database for document embeddings (RAG)
-- **Tavily API** - Real-time web search via MCP integration
+### **Data & Search**
+- **ChromaDB** - Vector database for document storage and retrieval
+- **Tavily API** - Real-time web search via MCP server
 - **PyPDF2** - PDF document processing
 
 ### **Architecture**
@@ -93,8 +87,10 @@ Access at `http://localhost:8000` with credentials from `.env` file.
 ---
 
 ## Features
-- **RAG-First Pipeline**: Queries ChromaDB first, falls back to web search when insufficient
-- **Intelligent Context Evaluation**: Strict relevance checking with keyword matching (requires 2+ matches)
+- **OpenAI Agents SDK Integration**: Official agent framework with built-in tracing and async processing
+- **Tool-Based Architecture**: Document search and web search as agent tools
+- **Async Processing**: Non-blocking query processing with visual indicators
+- **Built-in Tracing**: OpenAI Agents SDK provides automatic execution tracing
 - **Multi-turn Memory**: Session-based conversation history (6 exchanges max)
 - **Content Guardrails**: Taiwan politics filtering + OpenAI moderation
 - **Real-time Web Search**: Tavily integration via MCP server
@@ -119,26 +115,15 @@ Then fill in your actual API keys:
 - `OPENAI_API_KEY` - Your OpenAI API key
 - `TAVILY_API_KEY` - Your Tavily search API key  
 - `CHAINLIT_AUTH_SECRET` - JWT secret for authentication
-- `CHAINLIT_USERNAME` - Login username (default: admin)
-- `CHAINLIT_PASSWORD` - Login password (default: password)
+- `CHAINLIT_USERNAME` - Login username
+- `CHAINLIT_PASSWORD` - Login password
 
-## Troubleshooting
-
-### Python 3.13 Compatibility
-If you encounter Pydantic/Chainlit errors with Python 3.13:
-- **Solution**: Use Chainlit 2.8.0+ (already specified in requirements.txt)
-- **Install**: `pip install "chainlit>=2.8.0" --upgrade`
-
-### Dependency Conflicts
-If you get dependency resolution errors:
-- **Solution**: Create fresh virtual environment
-- **Commands**:
-  ```bash
-  rm -rf venv
-  python3 -m venv venv
-  source venv/bin/activate
-  pip install -r requirements.txt
-  ```
+## Installation
+```bash
+python -m venv venv
+source venv/bin/activate  # On Windows: venv\Scripts\activate
+pip install -r requirements.txt
+```
 
 ### Guardrails Testing
 Create a test script to verify guardrails:
@@ -151,12 +136,14 @@ print("Blocked:" if is_blocked else "Allowed:", msg)
 Expected: Taiwan politics queries blocked, normal queries allowed.
 
 ## Recent Improvements (20250929)
-- **Fixed RAG Evaluation**: Stricter keyword matching prevents irrelevant document responses
-- **Enhanced Web Search**: Properly activates when RAG content is insufficient or irrelevant
-- **Better Context Logic**: Only uses RAG results when they're actually relevant to the query
-- **Improved Prompts**: Clearer instructions for prioritizing web vs document data
-- **Persistent ChromaDB**: Documents remain stored between app restarts
-- **Custom UI**: OpenAI logo integration and branded interface
-- **Environment Config**: Username/password stored in .env variables
-- **Dependency Resolution**: Fixed Python 3.13 compatibility with Chainlit 2.8.0+
-- **Guardrails Verified**: Taiwan politics filtering tested and confirmed working
+- ✅ **OpenAI Agents SDK Integration**: Migrated from custom agent to official OpenAI Agents SDK
+- ✅ **Async Processing**: Added non-blocking query processing with visual indicators
+- ✅ **Built-in Tracing**: Automatic execution tracing from OpenAI Agents SDK
+- ✅ **Tool-Based Architecture**: Document and web search implemented as proper agent tools
+- ✅ **Enhanced UI**: Processing indicators and step-by-step execution visibility
+- ✅ **Code Cleanup**: Removed interim artifacts and consolidated to final implementation
+
+---
+
+## License
+MIT License - Feel free to use and modify for your projects!
