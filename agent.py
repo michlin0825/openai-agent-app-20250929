@@ -13,42 +13,13 @@ nest_asyncio.apply()
 
 load_dotenv()
 
-def search_documents(query: str) -> str:
-    """Search ChromaDB for document information"""
-    try:
-        results = query_chroma(query)
-        if results and len(results) > 0:
-            return f"Document search results: {results}"
-        return "No relevant documents found."
-    except Exception as e:
-        return f"Document search error: {str(e)}"
-
-# Add required attributes for OpenAI Agents SDK
-search_documents.__name__ = "search_documents"
-
-def search_web(query: str) -> str:
-    """Search the web for current information"""
-    try:
-        mcp_server = MCPTavilyServer()
-        results = mcp_server.search_web(query, max_results=3)
-        if results:
-            formatted_results = []
-            for result in results:
-                formatted_results.append(f"Title: {result.get('title', 'N/A')}\nContent: {result.get('content', 'N/A')}\nURL: {result.get('url', 'N/A')}")
-            return f"Web search results:\n\n" + "\n\n".join(formatted_results)
-        return "No web search results found."
-    except Exception as e:
-        return f"Web search error: {str(e)}"
-
-# Add required attributes for OpenAI Agents SDK  
-search_web.__name__ = "search_web"
-
 class OpenAIAgentSDK:
     def __init__(self):
         self.client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+        self.mcp_server = MCPTavilyServer()
         self.conversation_memory = {}
         
-        # Initialize OpenAI Agent SDK (tools will be added later when needed)
+        # Initialize OpenAI Agent SDK (tools handled separately due to SDK limitations)
         self.agent = Agent(
             name="RAG-Web-Search-Agent",
             model="gpt-3.5-turbo",
@@ -59,8 +30,31 @@ class OpenAIAgentSDK:
             2. Maintain conversation context
             3. Apply content safety guardrails
             
-            Provide helpful and informative responses."""
+            Provide helpful and informative responses. When you need specific current information or document details, indicate what type of search would be helpful."""
         )
+    
+    def search_documents_tool(self, query: str) -> str:
+        """Search ChromaDB for document information"""
+        try:
+            results = query_chroma(query)
+            if results and len(results) > 0:
+                return f"Document search results: {results}"
+            return "No relevant documents found."
+        except Exception as e:
+            return f"Document search error: {str(e)}"
+    
+    def search_web_tool(self, query: str) -> str:
+        """Search the web for current information"""
+        try:
+            results = self.mcp_server.search_web(query, max_results=3)
+            if results:
+                formatted_results = []
+                for result in results:
+                    formatted_results.append(f"Title: {result.get('title', 'N/A')}\nContent: {result.get('content', 'N/A')}\nURL: {result.get('url', 'N/A')}")
+                return f"Web search results:\n\n" + "\n\n".join(formatted_results)
+            return "No web search results found."
+        except Exception as e:
+            return f"Web search error: {str(e)}"
     
     def check_guardrails(self, user_query: str) -> Tuple[bool, Optional[str]]:
         """Enhanced guardrails for inappropriate content and Taiwan politics"""
@@ -89,8 +83,18 @@ class OpenAIAgentSDK:
         except:
             return False, None
     
+    def needs_web_search(self, query: str) -> bool:
+        """Check if query needs web search"""
+        web_keywords = ['weather', 'news', 'current', 'today', 'latest', 'stock price', 'happening now', 'temperature', 'forecast']
+        return any(keyword in query.lower() for keyword in web_keywords)
+    
+    def needs_document_search(self, query: str) -> bool:
+        """Check if query needs document search"""
+        doc_keywords = ['amazon', 'aws', 'shareholder', 'financial', 'revenue', 'business', 'profit', 'earnings', 'annual report']
+        return any(keyword in query.lower() for keyword in doc_keywords)
+    
     async def process_query_async(self, user_query: str, session_id: str) -> str:
-        """Process query using OpenAI Agents SDK with async support"""
+        """Process query using hybrid approach with intelligent tool routing"""
         
         # Check guardrails first
         is_blocked, guardrail_message = self.check_guardrails(user_query)
@@ -104,19 +108,21 @@ class OpenAIAgentSDK:
         full_query = f"Previous conversation context: {memory_context}\n\nCurrent query: {user_query}"
         
         try:
-            # Check if query needs web search or document search
+            # Intelligent tool routing
             if self.needs_web_search(user_query):
-                web_results = search_web(user_query)
-                # Use OpenAI to format the web search results naturally
+                # Use web search tool and format with OpenAI
+                web_results = self.search_web_tool(user_query)
                 format_prompt = f"User asked: {user_query}\n\nWeb search results: {web_results}\n\nPlease provide a natural, helpful response based on this information."
                 result = Runner.run_sync(self.agent, format_prompt)
                 response = result.final_output or "I found some information but couldn't format it properly."
+                
             elif self.needs_document_search(user_query):
-                doc_results = search_documents(user_query)
-                # Use OpenAI to format the document search results naturally
+                # Use document search tool and format with OpenAI
+                doc_results = self.search_documents_tool(user_query)
                 format_prompt = f"User asked: {user_query}\n\nDocument search results: {doc_results}\n\nPlease provide a natural, helpful response based on this information."
                 result = Runner.run_sync(self.agent, format_prompt)
                 response = result.final_output or "I found some information but couldn't format it properly."
+                
             else:
                 # Use OpenAI Agents SDK for general queries
                 result = Runner.run_sync(self.agent, full_query)
@@ -129,16 +135,6 @@ class OpenAIAgentSDK:
             
         except Exception as e:
             return f"I encountered an error processing your request: {str(e)}"
-    
-    def needs_web_search(self, query: str) -> bool:
-        """Check if query needs web search"""
-        web_keywords = ['weather', 'news', 'current', 'today', 'latest', 'stock price', 'happening now']
-        return any(keyword in query.lower() for keyword in web_keywords)
-    
-    def needs_document_search(self, query: str) -> bool:
-        """Check if query needs document search"""
-        doc_keywords = ['amazon', 'aws', 'shareholder', 'financial', 'revenue', 'business']
-        return any(keyword in query.lower() for keyword in doc_keywords)
     
     def process_query(self, user_query: str, session_id: str) -> str:
         """Synchronous wrapper for async process_query"""
