@@ -19,6 +19,9 @@ def search_documents(query: str) -> str:
     except Exception as e:
         return f"Document search error: {str(e)}"
 
+# Add required attributes for OpenAI Agents SDK
+search_documents.__name__ = "search_documents"
+
 def search_web(query: str) -> str:
     """Search the web for current information"""
     try:
@@ -32,6 +35,9 @@ def search_web(query: str) -> str:
         return "No web search results found."
     except Exception as e:
         return f"Web search error: {str(e)}"
+
+# Add required attributes for OpenAI Agents SDK  
+search_web.__name__ = "search_web"
 
 class OpenAIAgentSDK:
     def __init__(self):
