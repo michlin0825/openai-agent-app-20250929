@@ -108,6 +108,8 @@ class OpenAIAgentSDK:
         # Prepare context with memory
         full_query = f"Previous conversation context: {memory_context}\n\nCurrent query: {user_query}"
         
+        full_response = ""
+        
         try:
             # Intelligent tool routing with streaming
             if self.needs_web_search(user_query):
@@ -117,6 +119,7 @@ class OpenAIAgentSDK:
                 
                 # Stream the formatted response
                 async for chunk in self._stream_openai_response(format_prompt):
+                    full_response += chunk
                     yield chunk
                     
             elif self.needs_document_search(user_query):
@@ -126,20 +129,22 @@ class OpenAIAgentSDK:
                 
                 # Stream the formatted response
                 async for chunk in self._stream_openai_response(format_prompt):
+                    full_response += chunk
                     yield chunk
                     
             else:
                 # Stream general query response
                 async for chunk in self._stream_openai_response(full_query):
+                    full_response += chunk
                     yield chunk
             
             # Update conversation memory with full response
-            full_response = ""
-            # Note: In real implementation, we'd collect chunks to build full_response
-            # For now, we'll update memory in the non-streaming method
+            self.update_memory(session_id, user_query, full_response)
             
         except Exception as e:
-            yield f"I encountered an error processing your request: {str(e)}"
+            error_msg = f"I encountered an error processing your request: {str(e)}"
+            yield error_msg
+            self.update_memory(session_id, user_query, error_msg)
     
     async def _stream_openai_response(self, prompt: str):
         """Stream response from OpenAI using direct client"""
@@ -212,7 +217,8 @@ class OpenAIAgentSDK:
         memory = self.conversation_memory[session_id]
         context_parts = []
         
-        for exchange in memory[-3:]:  # Last 3 exchanges
+        # Use last 10 exchanges (20 turns) for better context
+        for exchange in memory[-10:]:
             context_parts.append(f"User: {exchange['user']}")
             context_parts.append(f"Assistant: {exchange['assistant']}")
         
@@ -228,9 +234,9 @@ class OpenAIAgentSDK:
             'assistant': response
         })
         
-        # Keep only last 6 exchanges
-        if len(self.conversation_memory[session_id]) > 6:
-            self.conversation_memory[session_id] = self.conversation_memory[session_id][-6:]
+        # Keep last 20 exchanges (40 turns total)
+        if len(self.conversation_memory[session_id]) > 20:
+            self.conversation_memory[session_id] = self.conversation_memory[session_id][-20:]
 
 # Main agent class for the application
 OpenAIAgent = OpenAIAgentSDK
