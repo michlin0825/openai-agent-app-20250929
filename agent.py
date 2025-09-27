@@ -1,7 +1,7 @@
 import os
 import asyncio
 from typing import Dict, List, Optional, Tuple
-from agents import Agent, run
+from agents import Agent, Runner
 from openai import OpenAI
 from pdf_processor import query_chroma
 from mcp_server import MCPTavilyServer
@@ -28,7 +28,8 @@ class OpenAIAgentSDK:
             4. Apply content safety guardrails
             
             Always prioritize document information for factual queries and web search for current events.
-            Use the appropriate tool based on the query type."""
+            Use the appropriate tool based on the query type.""",
+            tools=[self.search_documents, self.search_web]
         )
     
     def check_guardrails(self, user_query: str) -> Tuple[bool, Optional[str]]:
@@ -96,44 +97,13 @@ class OpenAIAgentSDK:
         full_query = f"Previous conversation context: {memory_context}\n\nCurrent query: {user_query}"
         
         try:
-            # Use OpenAI Agents SDK with tracing
-            result = await run(
-                self.agent,
-                full_query,
-                tools=[
-                    {
-                        "type": "function",
-                        "function": {
-                            "name": "search_documents",
-                            "description": "Search ChromaDB for document information",
-                            "parameters": {
-                                "type": "object",
-                                "properties": {
-                                    "query": {"type": "string", "description": "Search query for documents"}
-                                },
-                                "required": ["query"]
-                            }
-                        }
-                    },
-                    {
-                        "type": "function", 
-                        "function": {
-                            "name": "search_web",
-                            "description": "Search the web for current information",
-                            "parameters": {
-                                "type": "object",
-                                "properties": {
-                                    "query": {"type": "string", "description": "Search query for web"}
-                                },
-                                "required": ["query"]
-                            }
-                        }
-                    }
-                ],
-                tool_functions={
-                    "search_documents": self.search_documents,
-                    "search_web": self.search_web
-                }
+            # Use OpenAI Agents SDK with Runner in a thread pool
+            loop = asyncio.get_event_loop()
+            result = await loop.run_in_executor(
+                None, 
+                Runner.run_sync, 
+                self.agent, 
+                full_query
             )
             
             response = result.final_output or "I apologize, but I couldn't generate a response."
