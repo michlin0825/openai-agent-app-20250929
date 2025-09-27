@@ -9,27 +9,49 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
+def search_documents(query: str) -> str:
+    """Search ChromaDB for document information"""
+    try:
+        results = query_chroma(query)
+        if results and len(results) > 0:
+            return f"Document search results: {results}"
+        return "No relevant documents found."
+    except Exception as e:
+        return f"Document search error: {str(e)}"
+
+def search_web(query: str) -> str:
+    """Search the web for current information"""
+    try:
+        mcp_server = MCPTavilyServer()
+        results = mcp_server.search_web(query, max_results=3)
+        if results:
+            formatted_results = []
+            for result in results:
+                formatted_results.append(f"Title: {result.get('title', 'N/A')}\nContent: {result.get('content', 'N/A')}\nURL: {result.get('url', 'N/A')}")
+            return f"Web search results:\n\n" + "\n\n".join(formatted_results)
+        return "No web search results found."
+    except Exception as e:
+        return f"Web search error: {str(e)}"
+
 class OpenAIAgentSDK:
     def __init__(self):
         self.client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
-        self.mcp_server = MCPTavilyServer()
         self.conversation_memory = {}
         
-        # Initialize OpenAI Agent SDK
+        # Initialize OpenAI Agent SDK with tools
         self.agent = Agent(
             name="RAG-Web-Search-Agent",
             model="gpt-3.5-turbo",
             instructions="""You are an intelligent assistant that combines document knowledge with real-time web search.
             
             Your capabilities:
-            1. Search documents first for factual information using search_documents tool
-            2. Use web search for current/real-time information using search_web tool
+            1. Search documents first for factual information using search_documents
+            2. Use web search for current/real-time information using search_web
             3. Maintain conversation context
             4. Apply content safety guardrails
             
-            Always prioritize document information for factual queries and web search for current events.
-            Use the appropriate tool based on the query type.""",
-            tools=[self.search_documents, self.search_web]
+            Always prioritize document information for factual queries and web search for current events.""",
+            tools=[search_documents, search_web]
         )
     
     def check_guardrails(self, user_query: str) -> Tuple[bool, Optional[str]]:
@@ -59,29 +81,6 @@ class OpenAIAgentSDK:
         except:
             return False, None
     
-    def search_documents(self, query: str) -> str:
-        """Tool function for document search"""
-        try:
-            results = query_chroma(query)
-            if results and len(results) > 0:
-                return f"Document search results: {results}"
-            return "No relevant documents found."
-        except Exception as e:
-            return f"Document search error: {str(e)}"
-    
-    def search_web(self, query: str) -> str:
-        """Tool function for web search"""
-        try:
-            results = self.mcp_server.search_web(query, max_results=3)
-            if results:
-                formatted_results = []
-                for result in results:
-                    formatted_results.append(f"Title: {result.get('title', 'N/A')}\nContent: {result.get('content', 'N/A')}\nURL: {result.get('url', 'N/A')}")
-                return f"Web search results:\n\n" + "\n\n".join(formatted_results)
-            return "No web search results found."
-        except Exception as e:
-            return f"Web search error: {str(e)}"
-    
     async def process_query_async(self, user_query: str, session_id: str) -> str:
         """Process query using OpenAI Agents SDK with async support"""
         
@@ -97,14 +96,8 @@ class OpenAIAgentSDK:
         full_query = f"Previous conversation context: {memory_context}\n\nCurrent query: {user_query}"
         
         try:
-            # Use OpenAI Agents SDK with Runner in a thread pool
-            loop = asyncio.get_event_loop()
-            result = await loop.run_in_executor(
-                None, 
-                Runner.run_sync, 
-                self.agent, 
-                full_query
-            )
+            # Use OpenAI Agents SDK synchronously (wrapped in async)
+            result = Runner.run_sync(self.agent, full_query)
             
             response = result.final_output or "I apologize, but I couldn't generate a response."
             
