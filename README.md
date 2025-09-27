@@ -4,6 +4,14 @@
 
 This intelligent chatbot combines **document knowledge** with **real-time web search** to provide comprehensive answers. It's designed for scenarios where you need both factual information from stored documents and current information from the web.
 
+### Screenshots
+
+**Chat Interface with Document Q&A:**
+![Chat Interface](screenshots/screenshot_1.png)
+
+**Web Search Integration:**
+![Web Search Results](screenshots/screenshot_2.png)
+
 ### Use Cases
 - **Document Q&A**: Ask questions about uploaded PDFs (currently contains Amazon 2023 Shareholder Letter)
 - **Current Information**: Get real-time data like weather, news, or stock prices
