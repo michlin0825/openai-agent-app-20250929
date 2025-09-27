@@ -137,6 +137,7 @@ Expected: Taiwan politics queries blocked, normal queries allowed.
 
 ## Recent Improvements (20250929)
 - ✅ **OpenAI Agents SDK Integration**: Migrated from custom agent to official OpenAI Agents SDK
+- ✅ **Fixed Import Issue**: Corrected import from `openai_agents` to `agents` 
 - ✅ **Async Processing**: Added non-blocking query processing with visual indicators
 - ✅ **Built-in Tracing**: Automatic execution tracing from OpenAI Agents SDK
 - ✅ **Tool-Based Architecture**: Document and web search implemented as proper agent tools
