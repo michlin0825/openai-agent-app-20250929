@@ -2,7 +2,7 @@
 
 ## What This App Does
 
-This intelligent chatbot combines **document knowledge** with **real-time web search** to provide comprehensive answers. Built using the **OpenAI Agents SDK**, it demonstrates modern agentic AI capabilities with RAG-first architecture and hybrid search functionality.
+This intelligent chatbot combines **document knowledge** with **real-time web search** to provide comprehensive answers. Built using the **OpenAI Agents SDK**, it demonstrates modern agentic AI capabilities with intelligent tool routing, streaming responses, and advanced memory management.
 
 ### Screenshots
 
@@ -14,9 +14,10 @@ This intelligent chatbot combines **document knowledge** with **real-time web se
 
 ### Use Cases
 - **Document Q&A**: Ask questions about uploaded PDFs (currently contains Amazon 2023 Shareholder Letter)
-- **Current Information**: Get real-time data like weather, news, or stock prices
+- **Current Information**: Get real-time data like weather, news, or stock prices with streaming responses
 - **Hybrid Queries**: Combine document facts with current context
-- **Conversational Memory**: Follow-up questions that reference previous exchanges
+- **Extended Conversations**: Unlimited conversation length with automatic memory compaction
+- **Conversational Memory**: Follow-up questions that reference previous exchanges (up to 20 turns)
 - **Content Safety**: Built-in guardrails for inappropriate or sensitive topics
 
 ---
@@ -33,12 +34,15 @@ This intelligent chatbot combines **document knowledge** with **real-time web se
 - **Tavily API** - Real-time web search for current information
 - **PyPDF2** - PDF document processing
 - **nest-asyncio** - Nested event loop support for async processing
+- **Memory Compaction** - Automatic conversation summarization for extended sessions
 
 ### **Architecture**
 - **Intelligent Tool Routing** - Automatic detection and routing between document search, web search, and general queries
 - **Enhanced Keyword Detection** - Expanded patterns for better query classification
+- **Streaming Response System** - Real-time token streaming with memory integration
+- **Advanced Memory Management** - 20-turn history with automatic summarization and compaction
 - **Polished Response Formatting** - Natural language processing of search results
-- **Session Memory** - Conversation context management
+- **Session Memory** - Conversation context management with infinite conversation support
 - **JWT Authentication** - Secure user sessions
 - **Async Event Loop** - Non-blocking processing with nest-asyncio
 
