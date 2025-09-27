@@ -1,11 +1,15 @@
 import os
 import asyncio
+import nest_asyncio
 from typing import Dict, List, Optional, Tuple
 from agents import Agent, Runner
 from openai import OpenAI
 from pdf_processor import query_chroma
 from mcp_server import MCPTavilyServer
 from dotenv import load_dotenv
+
+# Enable nested event loops
+nest_asyncio.apply()
 
 load_dotenv()
 
@@ -44,20 +48,18 @@ class OpenAIAgentSDK:
         self.client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
         self.conversation_memory = {}
         
-        # Initialize OpenAI Agent SDK with tools
+        # Initialize OpenAI Agent SDK (tools will be added later when needed)
         self.agent = Agent(
             name="RAG-Web-Search-Agent",
             model="gpt-3.5-turbo",
             instructions="""You are an intelligent assistant that combines document knowledge with real-time web search.
             
             Your capabilities:
-            1. Search documents first for factual information using search_documents
-            2. Use web search for current/real-time information using search_web
-            3. Maintain conversation context
-            4. Apply content safety guardrails
+            1. Answer questions using your knowledge
+            2. Maintain conversation context
+            3. Apply content safety guardrails
             
-            Always prioritize document information for factual queries and web search for current events.""",
-            tools=[search_documents, search_web]
+            Provide helpful and informative responses."""
         )
     
     def check_guardrails(self, user_query: str) -> Tuple[bool, Optional[str]]:
