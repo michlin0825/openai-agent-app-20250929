@@ -1,0 +1,179 @@
+import os
+import asyncio
+from typing import Dict, List, Optional, Tuple
+from openai_agents import Agent, run
+from openai import OpenAI
+from pdf_processor import query_chroma
+from mcp_server import MCPTavilyServer
+from dotenv import load_dotenv
+
+load_dotenv()
+
+class OpenAIAgentSDK:
+    def __init__(self):
+        self.client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+        self.mcp_server = MCPTavilyServer()
+        self.conversation_memory = {}
+        
+        # Initialize OpenAI Agent SDK
+        self.agent = Agent(
+            name="RAG-Web-Search-Agent",
+            model="gpt-3.5-turbo",
+            instructions="""You are an intelligent assistant that combines document knowledge with real-time web search.
+            
+            Your capabilities:
+            1. Search documents first for factual information using search_documents tool
+            2. Use web search for current/real-time information using search_web tool
+            3. Maintain conversation context
+            4. Apply content safety guardrails
+            
+            Always prioritize document information for factual queries and web search for current events.
+            Use the appropriate tool based on the query type."""
+        )
+    
+    def check_guardrails(self, user_query: str) -> Tuple[bool, Optional[str]]:
+        """Enhanced guardrails for inappropriate content and Taiwan politics"""
+        query_lower = user_query.lower()
+        
+        # Taiwan politics keywords
+        taiwan_politics_keywords = [
+            'taiwan politics', 'taiwanese politics', 'taiwan election', 'taiwan government',
+            'dpp', 'kmt', 'taiwan independence', 'taiwan unification', 'cross-strait',
+            'taiwan china', 'taiwan president', 'taiwan democracy', 'taiwan party',
+            'pan-blue', 'pan-green', 'taiwan political', 'taiwan vote', 'taiwan campaign'
+        ]
+        
+        # Check for Taiwan politics
+        if any(keyword in query_lower for keyword in taiwan_politics_keywords):
+            return True, "I appreciate your interest in current affairs! However, I'm designed to focus on helpful, informative topics rather than political discussions. I'd be happy to help you with questions about technology, business, weather, or other topics. What else can I assist you with? 😊"
+        
+        # Check OpenAI moderation for abusive content
+        try:
+            moderation = self.client.moderations.create(input=user_query)
+            result = moderation.results[0]
+            
+            if result.flagged:
+                return True, "I understand you're looking for information, but I'm designed to have respectful, helpful conversations. Could we explore something else I can assist you with today? 😊"
+            return False, None
+        except:
+            return False, None
+    
+    def search_documents(self, query: str) -> str:
+        """Tool function for document search"""
+        try:
+            results = query_chroma(query)
+            if results and len(results) > 0:
+                return f"Document search results: {results}"
+            return "No relevant documents found."
+        except Exception as e:
+            return f"Document search error: {str(e)}"
+    
+    def search_web(self, query: str) -> str:
+        """Tool function for web search"""
+        try:
+            results = self.mcp_server.search_web(query, max_results=3)
+            if results:
+                formatted_results = []
+                for result in results:
+                    formatted_results.append(f"Title: {result.get('title', 'N/A')}\nContent: {result.get('content', 'N/A')}\nURL: {result.get('url', 'N/A')}")
+                return f"Web search results:\n\n" + "\n\n".join(formatted_results)
+            return "No web search results found."
+        except Exception as e:
+            return f"Web search error: {str(e)}"
+    
+    async def process_query_async(self, user_query: str, session_id: str) -> str:
+        """Process query using OpenAI Agents SDK with async support"""
+        
+        # Check guardrails first
+        is_blocked, guardrail_message = self.check_guardrails(user_query)
+        if is_blocked:
+            return guardrail_message
+        
+        # Get conversation memory
+        memory_context = self.get_memory_context(session_id)
+        
+        # Prepare context with memory
+        full_query = f"Previous conversation context: {memory_context}\n\nCurrent query: {user_query}"
+        
+        try:
+            # Use OpenAI Agents SDK with tracing
+            result = await run(
+                self.agent,
+                full_query,
+                tools=[
+                    {
+                        "type": "function",
+                        "function": {
+                            "name": "search_documents",
+                            "description": "Search ChromaDB for document information",
+                            "parameters": {
+                                "type": "object",
+                                "properties": {
+                                    "query": {"type": "string", "description": "Search query for documents"}
+                                },
+                                "required": ["query"]
+                            }
+                        }
+                    },
+                    {
+                        "type": "function", 
+                        "function": {
+                            "name": "search_web",
+                            "description": "Search the web for current information",
+                            "parameters": {
+                                "type": "object",
+                                "properties": {
+                                    "query": {"type": "string", "description": "Search query for web"}
+                                },
+                                "required": ["query"]
+                            }
+                        }
+                    }
+                ],
+                tool_functions={
+                    "search_documents": self.search_documents,
+                    "search_web": self.search_web
+                }
+            )
+            
+            response = result.final_output or "I apologize, but I couldn't generate a response."
+            
+            # Update conversation memory
+            self.update_memory(session_id, user_query, response)
+            
+            return response
+            
+        except Exception as e:
+            return f"I encountered an error processing your request: {str(e)}"
+    
+    def process_query(self, user_query: str, session_id: str) -> str:
+        """Synchronous wrapper for async process_query"""
+        return asyncio.run(self.process_query_async(user_query, session_id))
+    
+    def get_memory_context(self, session_id: str) -> str:
+        """Get conversation memory for session"""
+        if session_id not in self.conversation_memory:
+            return "No previous conversation."
+        
+        memory = self.conversation_memory[session_id]
+        context_parts = []
+        
+        for exchange in memory[-3:]:  # Last 3 exchanges
+            context_parts.append(f"User: {exchange['user']}")
+            context_parts.append(f"Assistant: {exchange['assistant']}")
+        
+        return "\n".join(context_parts)
+    
+    def update_memory(self, session_id: str, user_query: str, response: str):
+        """Update conversation memory"""
+        if session_id not in self.conversation_memory:
+            self.conversation_memory[session_id] = []
+        
+        self.conversation_memory[session_id].append({
+            'user': user_query,
+            'assistant': response
+        })
+        
+        # Keep only last 6 exchanges
+        if len(self.conversation_memory[session_id]) > 6:
+            self.conversation_memory[session_id] = self.conversation_memory[session_id][-6:]
