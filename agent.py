@@ -1,7 +1,7 @@
 import os
 import asyncio
 from typing import Dict, List, Optional, Tuple
-from openai_agents import Agent, run
+from agents import Agent, run
 from openai import OpenAI
 from pdf_processor import query_chroma
 from mcp_server import MCPTavilyServer
