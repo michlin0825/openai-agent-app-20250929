@@ -2,7 +2,7 @@
 
 ## What This App Does
 
-This intelligent chatbot combines **document knowledge** with **real-time web search** to provide comprehensive answers. It's designed for scenarios where you need both factual information from stored documents and current information from the web.
+This intelligent chatbot combines **document knowledge** with **real-time web search** to provide comprehensive answers. Built using the **OpenAI Agents SDK**, it demonstrates modern agentic AI capabilities with RAG-first architecture and hybrid search functionality.
 
 ### Screenshots
 
@@ -31,6 +31,7 @@ This intelligent chatbot combines **document knowledge** with **real-time web se
 
 ### **Core Framework**
 - **Python 3.x** + **Chainlit** - Chat interface framework
+- **OpenAI Agents SDK** - Agentic AI framework with built-in tracing
 - **OpenAI GPT-3.5-turbo** - Language model with moderation API
 
 ### **Knowledge & Search**
