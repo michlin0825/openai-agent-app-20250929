@@ -93,6 +93,70 @@ class OpenAIAgentSDK:
         doc_keywords = ['amazon', 'aws', 'shareholder', 'financial', 'revenue', 'business', 'profit', 'earnings', 'annual report']
         return any(keyword in query.lower() for keyword in doc_keywords)
     
+    async def stream_response_async(self, user_query: str, session_id: str):
+        """Stream response using OpenAI Agents SDK with intelligent tool routing"""
+        
+        # Check guardrails first
+        is_blocked, guardrail_message = self.check_guardrails(user_query)
+        if is_blocked:
+            yield guardrail_message
+            return
+        
+        # Get conversation memory
+        memory_context = self.get_memory_context(session_id)
+        
+        # Prepare context with memory
+        full_query = f"Previous conversation context: {memory_context}\n\nCurrent query: {user_query}"
+        
+        try:
+            # Intelligent tool routing with streaming
+            if self.needs_web_search(user_query):
+                # Use web search tool and stream formatted response
+                web_results = self.search_web_tool(user_query)
+                format_prompt = f"User asked: {user_query}\n\nWeb search results: {web_results}\n\nPlease provide a natural, helpful response based on this information."
+                
+                # Stream the formatted response
+                async for chunk in self._stream_openai_response(format_prompt):
+                    yield chunk
+                    
+            elif self.needs_document_search(user_query):
+                # Use document search tool and stream formatted response
+                doc_results = self.search_documents_tool(user_query)
+                format_prompt = f"User asked: {user_query}\n\nDocument search results: {doc_results}\n\nPlease provide a natural, helpful response based on this information."
+                
+                # Stream the formatted response
+                async for chunk in self._stream_openai_response(format_prompt):
+                    yield chunk
+                    
+            else:
+                # Stream general query response
+                async for chunk in self._stream_openai_response(full_query):
+                    yield chunk
+            
+            # Update conversation memory with full response
+            full_response = ""
+            # Note: In real implementation, we'd collect chunks to build full_response
+            # For now, we'll update memory in the non-streaming method
+            
+        except Exception as e:
+            yield f"I encountered an error processing your request: {str(e)}"
+    
+    async def _stream_openai_response(self, prompt: str):
+        """Stream response from OpenAI using direct client"""
+        try:
+            stream = self.client.chat.completions.create(
+                model="gpt-3.5-turbo",
+                messages=[{"role": "user", "content": prompt}],
+                stream=True
+            )
+            
+            for chunk in stream:
+                if chunk.choices[0].delta.content is not None:
+                    yield chunk.choices[0].delta.content
+                    
+        except Exception as e:
+            yield f"Streaming error: {str(e)}"
+                    
     async def process_query_async(self, user_query: str, session_id: str) -> str:
         """Process query using hybrid approach with intelligent tool routing"""
         

@@ -24,16 +24,21 @@ async def start():
 async def main(message: cl.Message):
     session_id = cl.user_session.get("session_id", "default")
     
-    # Show processing indicator with tracing
-    async with cl.Step(name="🤖 Agent Processing", type="run") as step:
-        step.output = "Analyzing query and determining best information sources..."
-        
-        try:
-            # Use async processing with OpenAI Agents SDK
-            response = await agent.process_query_async(message.content, session_id)
-            step.output = "✅ Query processed successfully with OpenAI Agents SDK"
-        except Exception as e:
-            response = f"I encountered an error: {str(e)}"
-            step.output = f"❌ Error: {str(e)}"
+    # Create empty message for streaming
+    msg = cl.Message(content="")
+    await msg.send()
     
-    await cl.Message(content=response).send()
+    try:
+        # Stream response in real-time
+        full_response = ""
+        async for chunk in agent.stream_response_async(message.content, session_id):
+            full_response += chunk
+            await msg.stream_token(chunk)
+        
+        # Update final message
+        await msg.update()
+        
+    except Exception as e:
+        error_msg = f"I encountered an error: {str(e)}"
+        await msg.stream_token(error_msg)
+        await msg.update()
