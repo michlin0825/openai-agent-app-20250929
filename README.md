@@ -6,10 +6,10 @@ This intelligent chatbot combines **document knowledge** with **real-time web se
 
 ### Screenshots
 
-**Chat Interface with Document Q&A:**
+**App Login Screen:**
 ![Chat Interface](screenshots/screenshot_1.png)
 
-**Web Search Integration:**
+**Q&A in Action:**
 ![Web Search Results](screenshots/screenshot_2.png)
 
 ### Use Cases
