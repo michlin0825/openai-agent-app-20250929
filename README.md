@@ -82,6 +82,8 @@ Access at `http://localhost:8000` with credentials from `.env` file.
   - Expected: Comparative analysis referencing the previous AWS discussion
 - Follow-up: *"What did you just tell me about revenue?"*
   - Expected: Summary of previously mentioned revenue figures
+- **Extended Memory**: Supports up to 20 conversation turns with automatic summarization
+- **Memory Compaction**: After 20 turns, older conversations are summarized to maintain context while preserving recent exchanges
 
 **Content Safety** (tests guardrails):
 - *"What do you think about Taiwan politics?"*
@@ -95,10 +97,11 @@ Access at `http://localhost:8000` with credentials from `.env` file.
 - **OpenAI Agents SDK Integration**: Official agent framework with built-in tracing and async processing
 - **Intelligent Tool Routing**: Automatic detection and routing between document search, web search, and general queries
 - **Enhanced Keyword Detection**: Expanded patterns for weather, news, financial, and document queries
+- **Streaming Responses**: Real-time token streaming for immediate user feedback and better UX
+- **Advanced Memory System**: 20-turn conversation history with automatic summarization and compaction
 - **Polished Response Formatting**: Natural language processing of search results for human-readable answers
 - **Async Processing**: Non-blocking query processing with visual indicators using nest-asyncio
 - **Built-in Tracing**: OpenAI Agents SDK provides automatic execution tracing
-- **Multi-turn Memory**: Session-based conversation history (6 exchanges max)
 - **Content Guardrails**: Taiwan politics filtering + OpenAI moderation
 - **Real-time Web Search**: Tavily integration for current information (weather, news, stock prices)
 - **Document Search**: ChromaDB vector search for uploaded PDFs (Amazon 2023 Shareholder Letter)
@@ -146,11 +149,13 @@ Expected: Taiwan politics queries blocked, normal queries allowed.
 ## Recent Improvements (20250929)
 - ✅ **OpenAI Agents SDK Integration**: Migrated from custom agent to official OpenAI Agents SDK
 - ✅ **Fixed Tools Integration**: Resolved function attribute issues with intelligent tool routing
+- ✅ **Streaming Responses**: Real-time token streaming for immediate user feedback and better UX
+- ✅ **Advanced Memory System**: Extended to 20-turn conversation history with automatic summarization
+- ✅ **Memory Compaction**: Automatic conversation summarization after 20 turns to maintain context
 - ✅ **Nested Event Loop Fix**: Resolved async issues with nest-asyncio
 - ✅ **Intelligent Tool Routing**: Automatic detection and routing between document search, web search, and general queries
 - ✅ **Polished Responses**: Natural language formatting of search results using OpenAI
 - ✅ **Enhanced Keyword Detection**: Expanded patterns for better query classification
-- ✅ **Async Processing**: Non-blocking query processing with visual indicators
 - ✅ **Built-in Tracing**: Automatic execution tracing from OpenAI Agents SDK
 - ✅ **Enhanced UI**: Processing indicators and step-by-step execution visibility
 - ✅ **Code Cleanup**: Removed interim artifacts and consolidated to final implementation

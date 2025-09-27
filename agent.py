@@ -225,7 +225,7 @@ class OpenAIAgentSDK:
         return "\n".join(context_parts)
     
     def update_memory(self, session_id: str, user_query: str, response: str):
-        """Update conversation memory"""
+        """Update conversation memory with automatic summarization"""
         if session_id not in self.conversation_memory:
             self.conversation_memory[session_id] = []
         
@@ -234,9 +234,44 @@ class OpenAIAgentSDK:
             'assistant': response
         })
         
-        # Keep last 20 exchanges (40 turns total)
-        if len(self.conversation_memory[session_id]) > 20:
-            self.conversation_memory[session_id] = self.conversation_memory[session_id][-20:]
+        # When reaching 20 exchanges, summarize and compact
+        if len(self.conversation_memory[session_id]) >= 20:
+            self._compact_memory(session_id)
+    
+    def _compact_memory(self, session_id: str):
+        """Compact memory by summarizing older conversations"""
+        memory = self.conversation_memory[session_id]
+        
+        # Take first 15 exchanges for summarization, keep last 5
+        old_conversations = memory[:-5]
+        recent_conversations = memory[-5:]
+        
+        # Create summary of old conversations
+        conversation_text = ""
+        for exchange in old_conversations:
+            conversation_text += f"User: {exchange['user']}\nAssistant: {exchange['assistant']}\n\n"
+        
+        try:
+            # Use OpenAI to summarize
+            summary_response = self.client.chat.completions.create(
+                model="gpt-3.5-turbo",
+                messages=[{
+                    "role": "user", 
+                    "content": f"Please provide a concise summary of this conversation history, focusing on key topics discussed and important information shared:\n\n{conversation_text}"
+                }],
+                max_tokens=200
+            )
+            
+            summary = summary_response.choices[0].message.content
+            
+            # Replace old conversations with summary
+            self.conversation_memory[session_id] = [
+                {'user': '[Previous conversation summary]', 'assistant': summary}
+            ] + recent_conversations
+            
+        except Exception as e:
+            # Fallback: just keep recent conversations
+            self.conversation_memory[session_id] = recent_conversations
 
 # Main agent class for the application
 OpenAIAgent = OpenAIAgentSDK
