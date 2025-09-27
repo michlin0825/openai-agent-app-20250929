@@ -104,10 +104,17 @@ class OpenAIAgentSDK:
         full_query = f"Previous conversation context: {memory_context}\n\nCurrent query: {user_query}"
         
         try:
-            # Use OpenAI Agents SDK synchronously (wrapped in async)
-            result = Runner.run_sync(self.agent, full_query)
-            
-            response = result.final_output or "I apologize, but I couldn't generate a response."
+            # Check if query needs web search or document search
+            if self.needs_web_search(user_query):
+                web_results = search_web(user_query)
+                response = f"Based on web search: {web_results}"
+            elif self.needs_document_search(user_query):
+                doc_results = search_documents(user_query)
+                response = f"Based on documents: {doc_results}"
+            else:
+                # Use OpenAI Agents SDK for general queries
+                result = Runner.run_sync(self.agent, full_query)
+                response = result.final_output or "I apologize, but I couldn't generate a response."
             
             # Update conversation memory
             self.update_memory(session_id, user_query, response)
@@ -116,6 +123,16 @@ class OpenAIAgentSDK:
             
         except Exception as e:
             return f"I encountered an error processing your request: {str(e)}"
+    
+    def needs_web_search(self, query: str) -> bool:
+        """Check if query needs web search"""
+        web_keywords = ['weather', 'news', 'current', 'today', 'latest', 'stock price', 'happening now']
+        return any(keyword in query.lower() for keyword in web_keywords)
+    
+    def needs_document_search(self, query: str) -> bool:
+        """Check if query needs document search"""
+        doc_keywords = ['amazon', 'aws', 'shareholder', 'financial', 'revenue', 'business']
+        return any(keyword in query.lower() for keyword in doc_keywords)
     
     def process_query(self, user_query: str, session_id: str) -> str:
         """Synchronous wrapper for async process_query"""
