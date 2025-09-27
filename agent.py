@@ -107,10 +107,16 @@ class OpenAIAgentSDK:
             # Check if query needs web search or document search
             if self.needs_web_search(user_query):
                 web_results = search_web(user_query)
-                response = f"Based on web search: {web_results}"
+                # Use OpenAI to format the web search results naturally
+                format_prompt = f"User asked: {user_query}\n\nWeb search results: {web_results}\n\nPlease provide a natural, helpful response based on this information."
+                result = Runner.run_sync(self.agent, format_prompt)
+                response = result.final_output or "I found some information but couldn't format it properly."
             elif self.needs_document_search(user_query):
                 doc_results = search_documents(user_query)
-                response = f"Based on documents: {doc_results}"
+                # Use OpenAI to format the document search results naturally
+                format_prompt = f"User asked: {user_query}\n\nDocument search results: {doc_results}\n\nPlease provide a natural, helpful response based on this information."
+                result = Runner.run_sync(self.agent, format_prompt)
+                response = result.final_output or "I found some information but couldn't format it properly."
             else:
                 # Use OpenAI Agents SDK for general queries
                 result = Runner.run_sync(self.agent, full_query)
