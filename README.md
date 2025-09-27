@@ -30,14 +30,16 @@ This intelligent chatbot combines **document knowledge** with **real-time web se
 
 ### **Data & Search**
 - **ChromaDB** - Vector database for document storage and retrieval
-- **Tavily API** - Real-time web search via MCP server
+- **Tavily API** - Real-time web search for current information
 - **PyPDF2** - PDF document processing
+- **nest-asyncio** - Nested event loop support for async processing
 
 ### **Architecture**
-- **RAG (Retrieval Augmented Generation)** - Document-first approach
-- **Hybrid Search** - Local documents + web search fallback
+- **Hybrid Search Intelligence** - Automatic routing between document search, web search, and general queries
+- **Polished Response Formatting** - Natural language processing of search results
 - **Session Memory** - Conversation context management
 - **JWT Authentication** - Secure user sessions
+- **Async Event Loop** - Non-blocking processing with nest-asyncio
 
 ---
 
@@ -88,12 +90,14 @@ Access at `http://localhost:8000` with credentials from `.env` file.
 
 ## Features
 - **OpenAI Agents SDK Integration**: Official agent framework with built-in tracing and async processing
-- **Tool-Based Architecture**: Document search and web search as agent tools
-- **Async Processing**: Non-blocking query processing with visual indicators
+- **Hybrid Search Intelligence**: Automatic routing between document search, web search, and general queries
+- **Polished Response Formatting**: Natural language processing of search results for human-readable answers
+- **Async Processing**: Non-blocking query processing with visual indicators using nest-asyncio
 - **Built-in Tracing**: OpenAI Agents SDK provides automatic execution tracing
 - **Multi-turn Memory**: Session-based conversation history (6 exchanges max)
 - **Content Guardrails**: Taiwan politics filtering + OpenAI moderation
-- **Real-time Web Search**: Tavily integration via MCP server
+- **Real-time Web Search**: Tavily integration for current information
+- **Document Search**: ChromaDB vector search for uploaded PDFs
 - **Chainlit UI**: Web interface with authentication and OpenAI logo
 - **Persistent Storage**: ChromaDB maintains documents between sessions
 
@@ -138,9 +142,11 @@ Expected: Taiwan politics queries blocked, normal queries allowed.
 ## Recent Improvements (20250929)
 - ✅ **OpenAI Agents SDK Integration**: Migrated from custom agent to official OpenAI Agents SDK
 - ✅ **Fixed Import Issue**: Corrected import from `openai_agents` to `agents` 
-- ✅ **Async Processing**: Added non-blocking query processing with visual indicators
+- ✅ **Nested Event Loop Fix**: Resolved async issues with nest-asyncio
+- ✅ **Hybrid Search Architecture**: Intelligent routing between document search, web search, and general queries
+- ✅ **Polished Responses**: Natural language formatting of search results using OpenAI
+- ✅ **Async Processing**: Non-blocking query processing with visual indicators
 - ✅ **Built-in Tracing**: Automatic execution tracing from OpenAI Agents SDK
-- ✅ **Tool-Based Architecture**: Document and web search implemented as proper agent tools
 - ✅ **Enhanced UI**: Processing indicators and step-by-step execution visibility
 - ✅ **Code Cleanup**: Removed interim artifacts and consolidated to final implementation
 
