@@ -46,6 +46,60 @@ This intelligent chatbot combines **document knowledge** with **real-time web se
 - **JWT Authentication** - Secure user sessions
 - **Async Event Loop** - Non-blocking processing with nest-asyncio
 
+### **System Flow**
+
+```mermaid
+sequenceDiagram
+    participant User
+    participant Chainlit as Chainlit UI
+    participant Agent as OpenAI Agent
+    participant Memory as Memory System
+    participant ChromaDB as ChromaDB
+    participant Tavily as Tavily API
+    participant OpenAI as OpenAI API
+
+    User->>Chainlit: Send message
+    Chainlit->>Agent: process_query_async()
+    
+    Agent->>Agent: check_guardrails()
+    alt Blocked content
+        Agent-->>Chainlit: Return guardrail message
+        Chainlit-->>User: Stream blocked message
+    else Content allowed
+        Agent->>Memory: get_memory_context()
+        Memory-->>Agent: Previous conversation context
+        
+        Agent->>Agent: Intelligent routing decision
+        
+        alt Document search needed
+            Agent->>ChromaDB: search_documents_tool()
+            ChromaDB-->>Agent: Document results
+            Agent->>OpenAI: Format results naturally
+            OpenAI-->>Agent: Formatted response chunks
+        else Web search needed
+            Agent->>Tavily: search_web_tool()
+            Tavily-->>Agent: Web search results
+            Agent->>OpenAI: Format results naturally
+            OpenAI-->>Agent: Formatted response chunks
+        else General query
+            Agent->>OpenAI: Direct query with context
+            OpenAI-->>Agent: Response chunks
+        end
+        
+        loop Streaming response
+            Agent-->>Chainlit: Stream token chunk
+            Chainlit-->>User: Display chunk in real-time
+        end
+        
+        Agent->>Memory: update_memory()
+        alt Memory > 20 turns
+            Memory->>OpenAI: Summarize old conversations
+            OpenAI-->>Memory: Conversation summary
+            Memory->>Memory: Compact memory (summary + recent)
+        end
+    end
+```
+
 ---
 
 ## Quick Start
