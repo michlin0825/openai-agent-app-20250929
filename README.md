@@ -335,7 +335,7 @@ print(f"After compaction - Exchanges: {final_stats['total_exchanges']}")
 
 ### Guardrails Testing
 ```python
-# Test guardrails functionality separately
+# Method 1: Test guardrails manager directly
 from guardrails import GuardrailsManager
 from openai import OpenAI
 
@@ -358,11 +358,20 @@ for query in test_queries:
         print(f"Response: {response}")
     print()
 
+# Method 2: Test via agent (integrated approach)
+from agent import OpenAIAgentSDK
+agent = OpenAIAgentSDK()
+
+# Quick verification
+is_blocked, msg = agent.guardrails_manager.check_guardrails("What about Taiwan politics?")
+print("Blocked:" if is_blocked else "Allowed:", msg)
+
 # Test OpenAI moderation integration
 offensive_query = "This is inappropriate content"  # Replace with actual test
 is_blocked, response = guardrails.check_guardrails(offensive_query)
 print(f"Moderation test - Blocked: {is_blocked}")
 ```
+**Expected Results:** Taiwan politics queries blocked with polite responses, normal queries allowed.
 
 ### Integration Testing
 ```python
@@ -547,22 +556,6 @@ python -m venv venv
 source venv/bin/activate  # On Windows: venv\Scripts\activate
 pip install -r requirements.txt
 ```
-
-### Quick Guardrails Verification
-Test the content safety system:
-```python
-from agent import OpenAIAgentSDK
-agent = OpenAIAgentSDK()
-
-# Test blocked content
-is_blocked, msg = agent.guardrails_manager.check_guardrails("What about Taiwan politics?")
-print("Blocked:" if is_blocked else "Allowed:", msg)
-
-# Test allowed content  
-is_blocked, msg = agent.guardrails_manager.check_guardrails("How does machine learning work?")
-print("Blocked:" if is_blocked else "Allowed:", msg or "Query allowed")
-```
-Expected: Taiwan politics queries blocked with polite responses, normal queries allowed.
 
 ## Recent Improvements (20250929)
 - ✅ **Modular Architecture**: Refactored codebase with separate memory_manager.py and guardrails.py modules
