@@ -184,10 +184,16 @@ sequenceDiagram
 ### OpenAI Agents SDK with Intelligent Tool Routing
 ```python
 # agent.py - OpenAI Agent with separated document and web search capabilities
+import os
+import nest_asyncio
+from typing import Dict, List, Optional, Tuple
 from agents import Agent, Runner
 from openai import OpenAI
 from pdf_processor import query_chroma
 from mcp_server import MCPTavilyServer
+from memory_manager import MemoryManager
+from guardrails import GuardrailsManager
+from dotenv import load_dotenv
 
 class OpenAIAgentSDK:
     def __init__(self):
@@ -207,8 +213,13 @@ class OpenAIAgentSDK:
             Your capabilities:
             1. Answer questions using your knowledge
             2. Maintain conversation context
-            3. Apply content safety guardrails"""
+            3. Apply content safety guardrails
+            
+            Provide helpful and informative responses. When you need specific current information or document details, indicate what type of search would be helpful."""
         )
+
+# Main agent class for the application
+OpenAIAgent = OpenAIAgentSDK  # Alias for easier importing
 ```
 
 ### Document Search Tool (ChromaDB/RAG)
@@ -272,6 +283,16 @@ class MCPTavilyServer:
 ### Chainlit Authentication & Streaming Interface
 ```python
 # app.py - Password authentication and streaming responses
+import chainlit as cl
+import os
+from dotenv import load_dotenv
+from agent import OpenAIAgent  # OpenAIAgent is an alias for OpenAIAgentSDK
+
+load_dotenv()
+
+# Initialize agent with OpenAI Agents SDK
+agent = OpenAIAgent()
+
 @cl.password_auth_callback
 def auth_callback(username: str, password: str):
     if username == os.getenv("CHAINLIT_USERNAME") and password == os.getenv("CHAINLIT_PASSWORD"):
@@ -286,13 +307,19 @@ async def main(message: cl.Message):
     msg = cl.Message(content="")
     await msg.send()
     
-    # Stream response in real-time
-    full_response = ""
-    async for chunk in agent.stream_response_async(message.content, session_id):
-        full_response += chunk
-        await msg.stream_token(chunk)
-    
-    await msg.update()
+    try:
+        # Stream response in real-time
+        full_response = ""
+        async for chunk in agent.stream_response_async(message.content, session_id):
+            full_response += chunk
+            await msg.stream_token(chunk)
+        
+        await msg.update()
+        
+    except Exception as e:
+        error_msg = f"I encountered an error: {str(e)}"
+        await msg.stream_token(error_msg)
+        await msg.update()
 ```
 
 ### Advanced Memory Management
@@ -301,9 +328,24 @@ async def main(message: cl.Message):
 class MemoryManager:
     def __init__(self, openai_client: OpenAI):
         self.client = openai_client
-        self.conversation_memory = {}
-        self.max_exchanges = 20
-        self.keep_recent = 5
+        self.conversation_memory: Dict[str, List[Dict]] = {}
+        self.max_exchanges = 20  # Maximum exchanges before compaction
+        self.keep_recent = 5     # Recent exchanges to keep after compaction
+    
+    def get_memory_context(self, session_id: str) -> str:
+        """Get conversation memory for session"""
+        if session_id not in self.conversation_memory:
+            return "No previous conversation."
+        
+        memory = self.conversation_memory[session_id]
+        context_parts = []
+        
+        # Use last 10 exchanges (20 turns) for better context
+        for exchange in memory[-10:]:
+            context_parts.append(f"User: {exchange['user']}")
+            context_parts.append(f"Assistant: {exchange['assistant']}")
+        
+        return "\n".join(context_parts)
     
     def update_memory(self, session_id: str, user_query: str, response: str):
         """Update conversation memory with automatic summarization"""
@@ -319,18 +361,6 @@ class MemoryManager:
         # Auto-compact if memory exceeds max exchanges
         if len(self.conversation_memory[session_id]) >= self.max_exchanges:
             self._compact_memory(session_id)
-    
-    def get_memory_context(self, session_id: str) -> str:
-        """Get formatted conversation context for the session"""
-        if session_id not in self.conversation_memory:
-            return ""
-        
-        context_parts = []
-        for exchange in self.conversation_memory[session_id]:
-            context_parts.append(f"User: {exchange['user']}")
-            context_parts.append(f"Assistant: {exchange['assistant']}")
-        
-        return "\n".join(context_parts)
 ```
 
 ### Content Safety Guardrails
@@ -339,11 +369,22 @@ class MemoryManager:
 class GuardrailsManager:
     def __init__(self, openai_client: OpenAI):
         self.client = openai_client
+        
+        # Taiwan politics keywords for filtering
         self.taiwan_politics_keywords = [
-            'taiwan politics', 'taiwan independence', 'cross-strait',
-            'taiwan election', 'dpp', 'kmt', 'taiwan president'
+            'taiwan politics', 'taiwanese politics', 'taiwan election', 'taiwan government',
+            'dpp', 'kmt', 'taiwan independence', 'taiwan unification', 'cross-strait',
+            'taiwan china', 'taiwan president', 'taiwan democracy', 'taiwan party',
+            'pan-blue', 'pan-green', 'taiwan political', 'taiwan vote', 'taiwan campaign'
         ]
-        self.moderation_response = "I can't assist with that type of content. Let me help you with something else."
+        
+        # Polite response for blocked content
+        self.blocked_response = (
+            "I appreciate your interest in current affairs! However, I'm designed to focus on "
+            "helpful, informative topics rather than political discussions. I'd be happy to help "
+            "you with questions about technology, business, weather, or other topics. "
+            "What else can I assist you with? 😊"
+        )
     
     def check_guardrails(self, user_query: str) -> Tuple[bool, Optional[str]]:
         """Enhanced guardrails for inappropriate content and Taiwan politics"""
@@ -351,7 +392,7 @@ class GuardrailsManager:
         
         # Check for Taiwan politics
         if any(keyword in query_lower for keyword in self.taiwan_politics_keywords):
-            return True, "I appreciate your interest, but I prefer to focus on other topics. How can I help you with something else?"
+            return True, self.blocked_response
         
         # Check OpenAI moderation for abusive content
         try:
