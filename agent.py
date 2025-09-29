@@ -185,6 +185,3 @@ class OpenAIAgentSDK:
             
         except Exception as e:
             return f"I encountered an error processing your request: {str(e)}"
-
-# Main agent class for the application
-OpenAIAgent = OpenAIAgentSDK

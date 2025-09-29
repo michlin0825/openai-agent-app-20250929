@@ -1,12 +1,12 @@
 import chainlit as cl
 import os
 from dotenv import load_dotenv
-from agent import OpenAIAgent
+from agent import OpenAIAgentSDK
 
 load_dotenv()
 
 # Initialize agent with OpenAI Agents SDK
-agent = OpenAIAgent()
+agent = OpenAIAgentSDK()
 
 @cl.password_auth_callback
 def auth_callback(username: str, password: str):

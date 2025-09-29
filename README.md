@@ -217,9 +217,6 @@ class OpenAIAgentSDK:
             
             Provide helpful and informative responses. When you need specific current information or document details, indicate what type of search would be helpful."""
         )
-
-# Main agent class for the application
-OpenAIAgent = OpenAIAgentSDK  # Alias for easier importing
 ```
 
 ### Document Search Tool (ChromaDB/RAG)
@@ -286,12 +283,12 @@ class MCPTavilyServer:
 import chainlit as cl
 import os
 from dotenv import load_dotenv
-from agent import OpenAIAgent  # OpenAIAgent is an alias for OpenAIAgentSDK
+from agent import OpenAIAgentSDK
 
 load_dotenv()
 
 # Initialize agent with OpenAI Agents SDK
-agent = OpenAIAgent()
+agent = OpenAIAgentSDK()
 
 @cl.password_auth_callback
 def auth_callback(username: str, password: str):
@@ -455,10 +452,10 @@ python -c "from memory_manager import MemoryManager; from guardrails import Guar
 ```
 openai-agent-app-20250929/
 ├── .chainlit/                      # Chainlit configuration
-│   └── config.toml                 # UI customization (removes footer message)
+│   ├── config.toml                 # UI customization (removes footer message)
+│   └── translations/               # Language files (English only)
+│       └── en-US.json              # English translations
 ├── README.md                        # Project documentation
-├── REFACTORING_SUMMARY.md           # Detailed refactoring changes
-├── DOCUMENTATION_VALIDATION.md      # Documentation accuracy report
 ├── screenshots/                     # App screenshots
 │   ├── screenshot_1.png            # App Login
 │   └── screenshot_2.png            # Q&A in Action
