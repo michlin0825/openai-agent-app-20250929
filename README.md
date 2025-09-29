@@ -280,62 +280,124 @@ class OpenAIAgentSDK:
 
 ## 🧪 Testing & Troubleshooting
 
-### Test Commands
+### Basic Test Commands
 ```bash
 python ingest_documents.py          # Load PDFs into ChromaDB
 chainlit run app.py                 # Start the application
-python test_refactored_agent.py     # Test refactored modules
-python -c "from agent import OpenAIAgent; agent = OpenAIAgent(); print('Agent initialized successfully')"
+python test_refactored_agent.py     # Test all refactored modules
+python -c "from agent import OpenAIAgentSDK; agent = OpenAIAgentSDK(); print('Agent initialized successfully')"
 ```
 
-### Module Testing
+### Memory Management Testing
 ```python
-# Test memory management
+# Test memory functionality separately
 from memory_manager import MemoryManager
 from openai import OpenAI
 
 client = OpenAI(api_key="your-key")
 memory = MemoryManager(client)
 
-memory.update_memory("test", "Hello", "Hi there!")
-context = memory.get_memory_context("test")
-stats = memory.get_session_stats("test")
+# Test basic memory operations
+memory.update_memory("test_session", "Hello", "Hi there!")
+context = memory.get_memory_context("test_session")
+stats = memory.get_session_stats("test_session")
 
-# Test guardrails
-from guardrails import GuardrailsManager
+print(f"Memory context: {context}")
+print(f"Session stats: {stats}")
 
-guardrails = GuardrailsManager(client)
-is_blocked, response = guardrails.check_guardrails("Taiwan politics")
-print(f"Blocked: {is_blocked}, Response: {response}")
+# Test memory compaction (simulate 20+ exchanges)
+for i in range(25):
+    memory.update_memory("test_session", f"Question {i}", f"Answer {i}")
+
+# Check if compaction occurred
+final_stats = memory.get_session_stats("test_session")
+print(f"After compaction - Exchanges: {final_stats['total_exchanges']}")
 ```
 
 ### Guardrails Testing
 ```python
-# Create test_guardrails.py
-from agent import OpenAIAgent
+# Test guardrails functionality separately
+from guardrails import GuardrailsManager
+from openai import OpenAI
 
-agent = OpenAIAgent()
+client = OpenAI(api_key="your-key")
+guardrails = GuardrailsManager(client)
 
-# Test blocked content
+# Test Taiwan politics filtering
 test_queries = [
-    "Tell me about Taiwan politics",
-    "What's the weather like today?",  # Should work
-    "Taiwan independence movement"      # Should be blocked
+    "Tell me about Taiwan politics",     # Should be blocked
+    "Taiwan independence movement",      # Should be blocked
+    "What's the weather like today?",    # Should be allowed
+    "How does machine learning work?"    # Should be allowed
 ]
 
 for query in test_queries:
-    allowed, response = agent.check_guardrails(query)
-    print(f"Query: {query}")
-    print(f"Allowed: {allowed}")
-    print(f"Response: {response}\n")
+    is_blocked, response = guardrails.check_guardrails(query)
+    status = "BLOCKED" if is_blocked else "ALLOWED"
+    print(f"Query: '{query}' -> {status}")
+    if response:
+        print(f"Response: {response}")
+    print()
+
+# Test OpenAI moderation integration
+offensive_query = "This is inappropriate content"  # Replace with actual test
+is_blocked, response = guardrails.check_guardrails(offensive_query)
+print(f"Moderation test - Blocked: {is_blocked}")
 ```
 
-### Common Issues
+### Integration Testing
+```python
+# Test full agent with both memory and guardrails
+from agent import OpenAIAgentSDK
+
+agent = OpenAIAgentSDK()
+
+# Test conversation flow with memory
+session_id = "integration_test"
+queries = [
+    "What did Amazon say about AI in 2023?",
+    "How does that compare to their retail business?",  # Tests memory
+    "Taiwan politics discussion"  # Tests guardrails
+]
+
+for query in queries:
+    print(f"\nTesting: {query}")
+    # This would normally be async, but for testing:
+    response = agent.process_query(query, session_id)
+    print(f"Response: {response[:100]}...")
+```
+
+### Common Issues & Troubleshooting
+
+#### Application Issues
 - **ChromaDB Empty**: Run `python ingest_documents.py` to load documents
 - **Streaming Not Working**: Check nest-asyncio installation and async event loop
 - **Authentication Failed**: Verify CHAINLIT_USERNAME and CHAINLIT_PASSWORD in `.env`
 - **API Errors**: Confirm OPENAI_API_KEY and TAVILY_API_KEY are valid
-- **Module Import Errors**: Ensure all new modules (memory_manager.py, guardrails.py) are in the same directory
+- **Module Import Errors**: Ensure all modules (memory_manager.py, guardrails.py) are in the same directory
+
+#### Memory Management Issues
+- **Memory Not Persisting**: Check if session_id is consistent across requests
+- **Compaction Not Working**: Verify OpenAI API key for summarization calls
+- **Memory Overflow**: Check if max_exchanges limit is properly configured (default: 20)
+
+#### Guardrails Issues
+- **Taiwan Politics Not Blocked**: Verify keywords in GuardrailsManager.taiwan_politics_keywords
+- **Moderation API Failing**: Check OpenAI API key and moderation endpoint access
+- **False Positives**: Review and adjust keyword patterns in guardrails.py
+
+#### Debug Commands
+```bash
+# Check ChromaDB contents
+python -c "from pdf_processor import setup_chromadb; collection = setup_chromadb(); print(f'Documents: {collection.count()}')"
+
+# Test API connections
+python -c "from openai import OpenAI; client = OpenAI(); print('OpenAI API: OK')"
+python -c "from mcp_server import MCPTavilyServer; server = MCPTavilyServer(); print('Tavily API: OK')"
+
+# Verify module imports
+python -c "from memory_manager import MemoryManager; from guardrails import GuardrailsManager; print('Modules: OK')"
+```
 
 ## 📁 Project Structure
 
@@ -465,18 +527,18 @@ source venv/bin/activate  # On Windows: venv\Scripts\activate
 pip install -r requirements.txt
 ```
 
-### Guardrails Testing
+### Quick Guardrails Verification
 Test the content safety system:
 ```python
-from agent import OpenAIAgent
-agent = OpenAIAgent()
+from agent import OpenAIAgentSDK
+agent = OpenAIAgentSDK()
 
 # Test blocked content
-is_blocked, msg = agent.check_guardrails("What about Taiwan politics?")
+is_blocked, msg = agent.guardrails_manager.check_guardrails("What about Taiwan politics?")
 print("Blocked:" if is_blocked else "Allowed:", msg)
 
 # Test allowed content  
-is_blocked, msg = agent.check_guardrails("How does machine learning work?")
+is_blocked, msg = agent.guardrails_manager.check_guardrails("How does machine learning work?")
 print("Blocked:" if is_blocked else "Allowed:", msg or "Query allowed")
 ```
 Expected: Taiwan politics queries blocked with polite responses, normal queries allowed.
