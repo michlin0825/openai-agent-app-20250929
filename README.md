@@ -297,105 +297,9 @@ class OpenAIAgentSDK:
         self.guardrails_manager = GuardrailsManager(self.client)
 ```
 
-## 🧪 Testing & Troubleshooting
+## 🔧 Troubleshooting
 
-### Basic Test Commands
-```bash
-python ingest_documents.py          # Load PDFs into ChromaDB
-chainlit run app.py                 # Start the application
-python test_refactored_agent.py     # Test all refactored modules
-python -c "from agent import OpenAIAgentSDK; agent = OpenAIAgentSDK(); print('Agent initialized successfully')"
-```
-
-### Memory Management Testing
-```python
-# Test memory functionality separately
-from memory_manager import MemoryManager
-from openai import OpenAI
-
-client = OpenAI(api_key="your-key")
-memory = MemoryManager(client)
-
-# Test basic memory operations
-memory.update_memory("test_session", "Hello", "Hi there!")
-context = memory.get_memory_context("test_session")
-stats = memory.get_session_stats("test_session")
-
-print(f"Memory context: {context}")
-print(f"Session stats: {stats}")
-
-# Test memory compaction (simulate 20+ exchanges)
-for i in range(25):
-    memory.update_memory("test_session", f"Question {i}", f"Answer {i}")
-
-# Check if compaction occurred
-final_stats = memory.get_session_stats("test_session")
-print(f"After compaction - Exchanges: {final_stats['total_exchanges']}")
-```
-
-### Guardrails Testing
-```python
-# Method 1: Test guardrails manager directly
-from guardrails import GuardrailsManager
-from openai import OpenAI
-
-client = OpenAI(api_key="your-key")
-guardrails = GuardrailsManager(client)
-
-# Test Taiwan politics filtering
-test_queries = [
-    "Tell me about Taiwan politics",     # Should be blocked
-    "Taiwan independence movement",      # Should be blocked
-    "What's the weather like today?",    # Should be allowed
-    "How does machine learning work?"    # Should be allowed
-]
-
-for query in test_queries:
-    is_blocked, response = guardrails.check_guardrails(query)
-    status = "BLOCKED" if is_blocked else "ALLOWED"
-    print(f"Query: '{query}' -> {status}")
-    if response:
-        print(f"Response: {response}")
-    print()
-
-# Method 2: Test via agent (integrated approach)
-from agent import OpenAIAgentSDK
-agent = OpenAIAgentSDK()
-
-# Quick verification
-is_blocked, msg = agent.guardrails_manager.check_guardrails("What about Taiwan politics?")
-print("Blocked:" if is_blocked else "Allowed:", msg)
-
-# Test OpenAI moderation integration
-offensive_query = "This is inappropriate content"  # Replace with actual test
-is_blocked, response = guardrails.check_guardrails(offensive_query)
-print(f"Moderation test - Blocked: {is_blocked}")
-```
-**Expected Results:** Taiwan politics queries blocked with polite responses, normal queries allowed.
-
-### Integration Testing
-```python
-# Test full agent with both memory and guardrails
-from agent import OpenAIAgentSDK
-
-agent = OpenAIAgentSDK()
-
-# Test conversation flow with memory
-session_id = "integration_test"
-queries = [
-    "What did Amazon say about AI in 2023?",
-    "How does that compare to their retail business?",  # Tests memory
-    "Taiwan politics discussion"  # Tests guardrails
-]
-
-for query in queries:
-    print(f"\nTesting: {query}")
-    # This would normally be async, but for testing:
-    response = agent.process_query(query, session_id)
-    print(f"Response: {response[:100]}...")
-```
-
-### Common Issues & Troubleshooting
+### Common Issues & Solutions
 
 #### Application Issues
 - **ChromaDB Empty**: Run `python ingest_documents.py` to load documents
@@ -482,36 +386,19 @@ Access at `http://localhost:8000` with credentials from `.env` file.
 
 **Document-Based Queries** (searches Amazon 2023 Shareholder Letter):
 - *"What did Amazon say about AI in 2023?"*
-  - Expected: Detailed response about Amazon's AI initiatives from the shareholder letter
 - *"How did Amazon perform financially in 2023?"*
-  - Expected: Revenue, profit, and growth metrics from the document
-- *"What are Amazon's key business segments?"*
-  - Expected: AWS, retail, advertising breakdown from shareholder data
 
 **Real-Time Web Search** (triggers Tavily search):
 - *"What's the weather in New York today?"*
-  - Expected: Current weather conditions and forecast
 - *"What's Amazon's current stock price?"*
-  - Expected: Live AMZN stock price and recent performance
-- *"What's happening in tech news today?"*
-  - Expected: Recent technology news and developments
-- *"What's the temperature in Tokyo?"*
-  - Expected: Current temperature and weather conditions
 
 **Conversational Memory** (references previous exchanges):
 - First: *"Tell me about Amazon's AWS business"*
 - Follow-up: *"How does that compare to their retail segment?"*
-  - Expected: Comparative analysis referencing the previous AWS discussion
-- Follow-up: *"What did you just tell me about revenue?"*
-  - Expected: Summary of previously mentioned revenue figures
-- **Extended Memory**: Supports up to 20 conversation turns with automatic summarization
-- **Memory Compaction**: After 20 turns, older conversations are summarized to maintain context while preserving recent exchanges
 
 **Content Safety** (tests guardrails):
 - *"What do you think about Taiwan politics?"*
   - Expected: Polite deflection with alternative topic suggestions
-
-**Guardrails Verification**: ✅ Tested and working - Taiwan politics filtering active with polite responses.
 
 ---
 
