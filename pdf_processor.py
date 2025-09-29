@@ -1,6 +1,9 @@
 import PyPDF2
 import chromadb
 import os
+from dotenv import load_dotenv
+
+load_dotenv()
 
 def extract_pdf_text(pdf_path):
     with open(pdf_path, 'rb') as file:
@@ -12,11 +15,11 @@ def extract_pdf_text(pdf_path):
 
 def setup_chromadb():
     # Ensure directory exists
-    db_path = "./chroma_db"
+    db_path = os.getenv("CHROMA_DB_PATH", "./chroma_db")
     os.makedirs(db_path, exist_ok=True)
     
     client = chromadb.PersistentClient(path=db_path)
-    collection = client.get_or_create_collection("documents")
+    collection = client.get_or_create_collection(os.getenv("CHROMA_COLLECTION_NAME", "documents"))
     return collection
 
 def load_pdf_to_chroma(pdf_path):
@@ -34,8 +37,10 @@ def load_pdf_to_chroma(pdf_path):
     )
     return chunks
 
-def query_chroma(query, n_results=3):
+def query_chroma(query, n_results=None):
     """Query ChromaDB for relevant documents"""
+    if n_results is None:
+        n_results = int(os.getenv("MAX_SEARCH_RESULTS", "3"))
     try:
         collection = setup_chromadb()
         results = collection.query(query_texts=[query], n_results=n_results)
@@ -43,7 +48,3 @@ def query_chroma(query, n_results=3):
     except Exception as e:
         print(f"ChromaDB query error: {e}")
         return []
-
-# Legacy function for backward compatibility
-def insert_pdf_to_chroma(pdf_path):
-    return len(load_pdf_to_chroma(pdf_path))

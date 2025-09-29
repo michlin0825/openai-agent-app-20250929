@@ -31,6 +31,9 @@ Thumbs.db
 
 # Logs
 *.log
+nohup.out
 
-# Test files
-test_*.py
+# Temporary files
+*.tmp
+*.bak
+*.old

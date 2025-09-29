@@ -47,6 +47,15 @@ cp .env.example .env
 - `CHAINLIT_USERNAME` - Login username (default: admin)
 - `CHAINLIT_PASSWORD` - Login password (default: password)
 
+**Optional Configuration:**
+- `OPENAI_MODEL` - OpenAI model to use (default: gpt-3.5-turbo)
+- `MAX_SEARCH_RESULTS` - Maximum search results to return (default: 3)
+- `SUMMARIZATION_MAX_TOKENS` - Max tokens for memory summarization (default: 200)
+- `MAX_EXCHANGES` - Maximum conversation exchanges before compaction (default: 20)
+- `KEEP_RECENT_EXCHANGES` - Recent exchanges to keep after compaction (default: 5)
+- `CHROMA_DB_PATH` - ChromaDB database path (default: ./chroma_db)
+- `CHROMA_COLLECTION_NAME` - ChromaDB collection name (default: documents)
+
 ### 3. Start Application
 ```bash
 chainlit run app.py --port 8000

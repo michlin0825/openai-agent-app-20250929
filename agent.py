@@ -1,6 +1,6 @@
 import os
 import nest_asyncio
-from typing import Dict, List, Optional, Tuple
+from typing import Optional, Tuple
 from agents import Agent, Runner
 from openai import OpenAI
 from pdf_processor import query_chroma
@@ -26,7 +26,7 @@ class OpenAIAgentSDK:
         # Initialize OpenAI Agent SDK (tools handled separately due to SDK limitations)
         self.agent = Agent(
             name="RAG-Web-Search-Agent",
-            model="gpt-3.5-turbo",
+            model=os.getenv("OPENAI_MODEL", "gpt-3.5-turbo"),
             instructions="""You are an intelligent assistant that combines document knowledge with real-time web search.
             
             Your capabilities:
@@ -50,7 +50,7 @@ class OpenAIAgentSDK:
     def search_web_tool(self, query: str) -> str:
         """Search the web for current information"""
         try:
-            results = self.mcp_server.search_web(query, max_results=3)
+            results = self.mcp_server.search_web(query, max_results=int(os.getenv("MAX_SEARCH_RESULTS", "3")))
             if results:
                 formatted_results = []
                 for result in results:
@@ -131,7 +131,7 @@ class OpenAIAgentSDK:
         """Stream response from OpenAI using direct client"""
         try:
             stream = self.client.chat.completions.create(
-                model="gpt-3.5-turbo",
+                model=os.getenv("OPENAI_MODEL", "gpt-3.5-turbo"),
                 messages=[{"role": "user", "content": prompt}],
                 stream=True
             )

@@ -3,6 +3,7 @@ Memory Management Module for OpenAI Agent App
 Handles conversation memory, context retrieval, and automatic compaction
 """
 
+import os
 import time
 from typing import Dict, List, Optional
 from openai import OpenAI
@@ -12,8 +13,8 @@ class MemoryManager:
     def __init__(self, openai_client: OpenAI):
         self.client = openai_client
         self.conversation_memory: Dict[str, List[Dict]] = {}
-        self.max_exchanges = 20  # Maximum exchanges before compaction
-        self.keep_recent = 5     # Recent exchanges to keep after compaction
+        self.max_exchanges = int(os.getenv("MAX_EXCHANGES", "20"))  # Maximum exchanges before compaction
+        self.keep_recent = int(os.getenv("KEEP_RECENT_EXCHANGES", "5"))     # Recent exchanges to keep after compaction
     
     def get_memory_context(self, session_id: str) -> str:
         """Get conversation memory for session"""
@@ -61,12 +62,12 @@ class MemoryManager:
         try:
             # Use OpenAI to summarize
             summary_response = self.client.chat.completions.create(
-                model="gpt-3.5-turbo",
+                model=os.getenv("OPENAI_MODEL", "gpt-3.5-turbo"),
                 messages=[{
                     "role": "user", 
                     "content": f"Please provide a concise summary of this conversation history, focusing on key topics discussed and important information shared:\n\n{conversation_text}"
                 }],
-                max_tokens=200
+                max_tokens=int(os.getenv("SUMMARIZATION_MAX_TOKENS", "200"))
             )
             
             summary = summary_response.choices[0].message.content
