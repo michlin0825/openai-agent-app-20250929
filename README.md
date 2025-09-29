@@ -399,48 +399,42 @@ Note: venv/ directory will be created when you run the installation commands
 
 ---
 
-## 🚀 Setup & Installation
+## 📄 Document Management
 
-### 1. Environment Setup
+### Current Documents
+The app comes pre-loaded with the **Amazon 2023 Shareholder Letter** (46 document chunks) in ChromaDB. These documents are preserved between sessions.
+
+### Adding New Documents
+
+**Step 1: Prepare your PDF**
+- Ensure your PDF is text-based (not scanned images)
+- Place the PDF file in an accessible location
+
+**Step 2: Ingest the document**
 ```bash
-# Clone or navigate to the project directory
-cd openai-agent-app-20250929
-
-# Create and activate virtual environment
-python -m venv venv
+# Activate virtual environment first
 source venv/bin/activate  # On Windows: venv\Scripts\activate
 
-# Install dependencies
-pip install -r requirements.txt
+# Ingest a single PDF document
+python ingest_documents.py path/to/your_document.pdf
+
+# Example:
+python ingest_documents.py ~/Downloads/my_report.pdf
 ```
 
-### 2. Configuration
+**Step 3: Verify ingestion**
 ```bash
-# Copy environment template
-cp .env.example .env
-# Edit .env with your API keys
+# Check how many documents are now in the database
+python -c "from pdf_processor import setup_chromadb; collection = setup_chromadb(); print(f'Total documents: {collection.count()}')"
 ```
 
-**Required API Keys:**
-- `OPENAI_API_KEY` - Your OpenAI API key
-- `TAVILY_API_KEY` - Your Tavily search API key  
-- `CHAINLIT_AUTH_SECRET` - Secret for authentication (any random string)
-- `CHAINLIT_USERNAME` - Login username (default: admin)
-- `CHAINLIT_PASSWORD` - Login password (default: password)
+**Step 4: Test document search**
+Start the app and ask questions about your newly added document to verify it's searchable.
 
-### 3. Start Application
-```bash
-chainlit run app.py --port 8000
-```
-Access at `http://localhost:8000` with your configured credentials.
-
-## Document Management
-**Existing documents are preserved** - no need to re-ingest on startup.
-
-To add new documents:
-```bash
-python ingest_documents.py path/to/new_document.pdf
-```
+### Troubleshooting Document Ingestion
+- **"File not found"**: Check the file path is correct and accessible
+- **"No chunks ingested"**: PDF might be image-based or corrupted - try a different PDF
+- **"Import error"**: Ensure virtual environment is activated and dependencies installed
 
 ---
 
