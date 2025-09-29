@@ -217,7 +217,7 @@ async def main(message: cl.Message):
     await msg.update()
 ```
 
-### Advanced Memory Management & Guardrails
+### Advanced Memory Management
 ```python
 # memory_manager.py - Conversation memory with automatic compaction
 class MemoryManager:
@@ -241,7 +241,22 @@ class MemoryManager:
         # Auto-compact if memory exceeds max exchanges
         if len(self.conversation_memory[session_id]) >= self.max_exchanges:
             self._compact_memory(session_id)
+    
+    def get_memory_context(self, session_id: str) -> str:
+        """Get formatted conversation context for the session"""
+        if session_id not in self.conversation_memory:
+            return ""
+        
+        context_parts = []
+        for exchange in self.conversation_memory[session_id]:
+            context_parts.append(f"User: {exchange['user']}")
+            context_parts.append(f"Assistant: {exchange['assistant']}")
+        
+        return "\n".join(context_parts)
+```
 
+### Content Safety Guardrails
+```python
 # guardrails.py - Content safety guardrails implementation
 class GuardrailsManager:
     def __init__(self, openai_client: OpenAI):
@@ -250,6 +265,7 @@ class GuardrailsManager:
             'taiwan politics', 'taiwan independence', 'cross-strait',
             'taiwan election', 'dpp', 'kmt', 'taiwan president'
         ]
+        self.moderation_response = "I can't assist with that type of content. Let me help you with something else."
     
     def check_guardrails(self, user_query: str) -> Tuple[bool, Optional[str]]:
         """Enhanced guardrails for inappropriate content and Taiwan politics"""
@@ -266,8 +282,11 @@ class GuardrailsManager:
             return result.flagged, self.moderation_response if result.flagged else None
         except:
             return False, None
+```
 
-# agent.py - Refactored to use modular components
+### Modular Integration
+```python
+# agent.py - Integration of memory and guardrails managers
 class OpenAIAgentSDK:
     def __init__(self):
         self.client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
