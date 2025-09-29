@@ -1,53 +1,90 @@
 # OpenAI Agent App with RAG & Web Search
 
-## What This App Does
+## Overview
 
 This intelligent chatbot combines **document knowledge** with **real-time web search** to provide comprehensive answers. Built using the **OpenAI Agents SDK**, it demonstrates modern agentic AI capabilities with intelligent tool routing, streaming responses, and advanced memory management.
 
+### Key Features
+- **RAG-First Pipeline**: Searches documents first, then web when needed
+- **Intelligent Tool Routing**: Automatic detection between document search, web search, and general queries
+- **Advanced Memory System**: 20-turn conversation history with automatic summarization and compaction
+- **Content Safety Guardrails**: Taiwan politics filtering + OpenAI moderation
+- **Streaming Responses**: Real-time token streaming for immediate user feedback
+- **Modular Architecture**: Separated memory management and guardrails into dedicated modules
+
 ### Screenshots
+![App Login Screen](screenshots/screenshot_1.png)
+![Q&A in Action](screenshots/screenshot_2.png)
 
-**App Login Screen:**
-![Chat Interface](screenshots/screenshot_1.png)
+---
 
-**Q&A in Action:**
-![Web Search Results](screenshots/screenshot_2.png)
+## 🚀 Setup & Installation
 
-### Use Cases
-- **Document Q&A**: Ask questions about uploaded PDFs (currently contains Amazon 2023 Shareholder Letter)
-- **Current Information**: Get real-time data like weather, news, or stock prices with streaming responses
-- **Hybrid Queries**: Combine document facts with current context
-- **Extended Conversations**: Unlimited conversation length with automatic memory compaction
-- **Conversational Memory**: Follow-up questions that reference previous exchanges (up to 20 turns)
-- **Content Safety**: Built-in guardrails for inappropriate or sensitive topics
+### 1. Environment Setup
+```bash
+# Clone or navigate to the project directory
+cd openai-agent-app-20250929
+
+# Create and activate virtual environment
+python -m venv venv
+source venv/bin/activate  # On Windows: venv\Scripts\activate
+
+# Install dependencies
+pip install -r requirements.txt
+```
+
+### 2. Configuration
+```bash
+# Copy environment template
+cp .env.example .env
+# Edit .env with your API keys
+```
+
+**Required API Keys:**
+- `OPENAI_API_KEY` - Your OpenAI API key
+- `TAVILY_API_KEY` - Your Tavily search API key  
+- `CHAINLIT_AUTH_SECRET` - Secret for authentication (any random string)
+- `CHAINLIT_USERNAME` - Login username (default: admin)
+- `CHAINLIT_PASSWORD` - Login password (default: password)
+
+### 3. Start Application
+```bash
+chainlit run app.py --port 8000
+```
+Access at `http://localhost:8000` with your configured credentials.
+
+**Note**: Requires Chainlit 2.8.0+ for Python 3.13 compatibility (already in requirements.txt).
+
+### Try These Sample Questions
+
+**Document Queries** (Amazon 2023 Shareholder Letter):
+- *"What did Amazon say about AI in 2023?"*
+- *"How did Amazon perform financially in 2023?"*
+
+**Web Search** (real-time information):
+- *"What's the weather in New York today?"*
+- *"What's Amazon's current stock price?"*
+
+**Memory & Safety**:
+- Follow-up: *"How does that compare to their retail segment?"*
+- Blocked: *"What do you think about Taiwan politics?"*
 
 ---
 
 ## Tech Stack
 
-### **Core Framework**
+**Core Framework:**
 - **Python 3.x** + **Chainlit** - Chat interface framework
-- **OpenAI Agents SDK** - Official agentic AI framework with built-in tracing and async support
+- **OpenAI Agents SDK** - Official agentic AI framework with built-in tracing
 - **OpenAI GPT-3.5-turbo** - Language model with moderation API
 
-### **Data & Search**
+**Data & Search:**
 - **ChromaDB** - Vector database for document storage and retrieval
 - **Tavily API** - Real-time web search for current information
 - **PyPDF2** - PDF document processing
 - **nest-asyncio** - Nested event loop support for async processing
-- **Memory Compaction** - Automatic conversation summarization for extended sessions
 
-### **Architecture**
-- **Modular Design** - Separated memory management and guardrails into dedicated modules
-- **Intelligent Tool Routing** - Automatic detection and routing between document search, web search, and general queries
-- **Enhanced Keyword Detection** - Expanded patterns for better query classification
-- **Streaming Response System** - Real-time token streaming with memory integration
-- **Advanced Memory Management** - 20-turn history with automatic summarization and compaction
-- **Content Safety Guardrails** - Dedicated module for content filtering and moderation
-- **Session Memory** - Conversation context management with infinite conversation support
-- **Password Authentication** - Secure user sessions with Chainlit
-- **Async Event Loop** - Non-blocking processing with nest-asyncio
-
-### **System Flow**
+---
 
 ```mermaid
 sequenceDiagram
@@ -362,59 +399,40 @@ Note: venv/ directory will be created when you run the installation commands
 
 ---
 
-## Quick Start
+## 🚀 Setup & Installation
+
+### 1. Environment Setup
 ```bash
 # Clone or navigate to the project directory
 cd openai-agent-app-20250929
 
-# Copy environment template and configure
+# Create and activate virtual environment
+python -m venv venv
+source venv/bin/activate  # On Windows: venv\Scripts\activate
+
+# Install dependencies
+pip install -r requirements.txt
+```
+
+### 2. Configuration
+```bash
+# Copy environment template
 cp .env.example .env
 # Edit .env with your API keys
+```
 
-# Activate virtual environment and install dependencies
-source venv/bin/activate  # On Windows: venv\Scripts\activate
-pip install -r requirements.txt
+**Required API Keys:**
+- `OPENAI_API_KEY` - Your OpenAI API key
+- `TAVILY_API_KEY` - Your Tavily search API key  
+- `CHAINLIT_AUTH_SECRET` - Secret for authentication (any random string)
+- `CHAINLIT_USERNAME` - Login username (default: admin)
+- `CHAINLIT_PASSWORD` - Login password (default: password)
 
-# Start the application
+### 3. Start Application
+```bash
 chainlit run app.py --port 8000
 ```
-Access at `http://localhost:8000` with credentials from `.env` file.
-
-**Note**: If you encounter Chainlit compatibility issues with Python 3.13, the app requires Chainlit 2.8.0+ which is already specified in requirements.txt.
-
-### Try These Sample Questions
-
-**Document-Based Queries** (searches Amazon 2023 Shareholder Letter):
-- *"What did Amazon say about AI in 2023?"*
-- *"How did Amazon perform financially in 2023?"*
-
-**Real-Time Web Search** (triggers Tavily search):
-- *"What's the weather in New York today?"*
-- *"What's Amazon's current stock price?"*
-
-**Conversational Memory** (references previous exchanges):
-- First: *"Tell me about Amazon's AWS business"*
-- Follow-up: *"How does that compare to their retail segment?"*
-
-**Content Safety** (tests guardrails):
-- *"What do you think about Taiwan politics?"*
-  - Expected: Polite deflection with alternative topic suggestions
-
----
-
-## Features
-- **Modular Architecture**: Separated memory management and guardrails into dedicated modules for better maintainability
-- **OpenAI Agents SDK Integration**: Official agent framework with built-in tracing and async processing
-- **Intelligent Tool Routing**: Automatic detection and routing between document search, web search, and general queries
-- **Enhanced Keyword Detection**: Expanded patterns for weather, news, financial, and document queries
-- **Streaming Responses**: Real-time token streaming for immediate user feedback and better UX
-- **Advanced Memory System**: 20-turn conversation history with automatic summarization and compaction
-- **Content Safety Guardrails**: Dedicated module with Taiwan politics filtering + OpenAI moderation
-- **Async Processing**: Non-blocking query processing with visual indicators using nest-asyncio
-- **Real-time Web Search**: Tavily integration for current information (weather, news, stock prices)
-- **Document Search**: ChromaDB vector search for uploaded PDFs (Amazon 2023 Shareholder Letter)
-- **Chainlit UI**: Web interface with password authentication
-- **Persistent Storage**: ChromaDB maintains documents between sessions
+Access at `http://localhost:8000` with your configured credentials.
 
 ## Document Management
 **Existing documents are preserved** - no need to re-ingest on startup.
@@ -423,41 +441,6 @@ To add new documents:
 ```bash
 python ingest_documents.py path/to/new_document.pdf
 ```
-
-## Configuration
-Create a `.env` file from the example:
-```bash
-cp .env.example .env
-```
-
-Then fill in your actual API keys:
-- `OPENAI_API_KEY` - Your OpenAI API key
-- `TAVILY_API_KEY` - Your Tavily search API key  
-- `CHAINLIT_AUTH_SECRET` - Secret for authentication (can be any random string)
-- `CHAINLIT_USERNAME` - Login username
-- `CHAINLIT_PASSWORD` - Login password
-
-## Installation
-```bash
-python -m venv venv
-source venv/bin/activate  # On Windows: venv\Scripts\activate
-pip install -r requirements.txt
-```
-
-## Recent Improvements (20250929)
-- ✅ **Modular Architecture**: Refactored codebase with separate memory_manager.py and guardrails.py modules
-- ✅ **OpenAI Agents SDK Integration**: Migrated from custom agent to official OpenAI Agents SDK
-- ✅ **Enhanced Testing**: Added comprehensive test suite for refactored modules
-- ✅ **Streaming Responses**: Real-time token streaming for immediate user feedback and better UX
-- ✅ **Advanced Memory System**: Extended to 20-turn conversation history with automatic summarization
-- ✅ **Memory Compaction**: Automatic conversation summarization after 20 turns to maintain context
-- ✅ **Improved Maintainability**: Separated concerns for better code organization and testing
-- ✅ **Intelligent Tool Routing**: Automatic detection and routing between document search, web search, and general queries
-- ✅ **Polished Responses**: Natural language formatting of search results using OpenAI
-- ✅ **Enhanced Keyword Detection**: Expanded patterns for better query classification
-- ✅ **Built-in Tracing**: Automatic execution tracing from OpenAI Agents SDK
-- ✅ **Enhanced UI**: Processing indicators and step-by-step execution visibility
-- ✅ **Code Cleanup**: Removed interim artifacts and consolidated to final implementation
 
 ---
 
