@@ -1,11 +1,12 @@
 import os
-import asyncio
 import nest_asyncio
 from typing import Dict, List, Optional, Tuple
 from agents import Agent, Runner
 from openai import OpenAI
 from pdf_processor import query_chroma
 from mcp_server import MCPTavilyServer
+from memory_manager import MemoryManager
+from guardrails import GuardrailsManager
 from dotenv import load_dotenv
 
 # Enable nested event loops
@@ -17,7 +18,10 @@ class OpenAIAgentSDK:
     def __init__(self):
         self.client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
         self.mcp_server = MCPTavilyServer()
-        self.conversation_memory = {}
+        
+        # Initialize memory and guardrails managers
+        self.memory_manager = MemoryManager(self.client)
+        self.guardrails_manager = GuardrailsManager(self.client)
         
         # Initialize OpenAI Agent SDK (tools handled separately due to SDK limitations)
         self.agent = Agent(
@@ -57,31 +61,8 @@ class OpenAIAgentSDK:
             return f"Web search error: {str(e)}"
     
     def check_guardrails(self, user_query: str) -> Tuple[bool, Optional[str]]:
-        """Enhanced guardrails for inappropriate content and Taiwan politics"""
-        query_lower = user_query.lower()
-        
-        # Taiwan politics keywords
-        taiwan_politics_keywords = [
-            'taiwan politics', 'taiwanese politics', 'taiwan election', 'taiwan government',
-            'dpp', 'kmt', 'taiwan independence', 'taiwan unification', 'cross-strait',
-            'taiwan china', 'taiwan president', 'taiwan democracy', 'taiwan party',
-            'pan-blue', 'pan-green', 'taiwan political', 'taiwan vote', 'taiwan campaign'
-        ]
-        
-        # Check for Taiwan politics
-        if any(keyword in query_lower for keyword in taiwan_politics_keywords):
-            return True, "I appreciate your interest in current affairs! However, I'm designed to focus on helpful, informative topics rather than political discussions. I'd be happy to help you with questions about technology, business, weather, or other topics. What else can I assist you with? 😊"
-        
-        # Check OpenAI moderation for abusive content
-        try:
-            moderation = self.client.moderations.create(input=user_query)
-            result = moderation.results[0]
-            
-            if result.flagged:
-                return True, "I understand you're looking for information, but I'm designed to have respectful, helpful conversations. Could we explore something else I can assist you with today? 😊"
-            return False, None
-        except:
-            return False, None
+        """Check content safety guardrails"""
+        return self.guardrails_manager.check_guardrails(user_query)
     
     def needs_web_search(self, query: str) -> bool:
         """Check if query needs web search"""
@@ -103,7 +84,7 @@ class OpenAIAgentSDK:
             return
         
         # Get conversation memory
-        memory_context = self.get_memory_context(session_id)
+        memory_context = self.memory_manager.get_memory_context(session_id)
         
         # Prepare context with memory
         full_query = f"Previous conversation context: {memory_context}\n\nCurrent query: {user_query}"
@@ -139,12 +120,12 @@ class OpenAIAgentSDK:
                     yield chunk
             
             # Update conversation memory with full response
-            self.update_memory(session_id, user_query, full_response)
+            self.memory_manager.update_memory(session_id, user_query, full_response)
             
         except Exception as e:
             error_msg = f"I encountered an error processing your request: {str(e)}"
             yield error_msg
-            self.update_memory(session_id, user_query, error_msg)
+            self.memory_manager.update_memory(session_id, user_query, error_msg)
     
     async def _stream_openai_response(self, prompt: str):
         """Stream response from OpenAI using direct client"""
@@ -171,7 +152,7 @@ class OpenAIAgentSDK:
             return guardrail_message
         
         # Get conversation memory
-        memory_context = self.get_memory_context(session_id)
+        memory_context = self.memory_manager.get_memory_context(session_id)
         
         # Prepare context with memory
         full_query = f"Previous conversation context: {memory_context}\n\nCurrent query: {user_query}"
@@ -198,80 +179,12 @@ class OpenAIAgentSDK:
                 response = result.final_output or "I apologize, but I couldn't generate a response."
             
             # Update conversation memory
-            self.update_memory(session_id, user_query, response)
+            self.memory_manager.update_memory(session_id, user_query, response)
             
             return response
             
         except Exception as e:
             return f"I encountered an error processing your request: {str(e)}"
-    
-    def process_query(self, user_query: str, session_id: str) -> str:
-        """Synchronous wrapper for async process_query"""
-        return asyncio.run(self.process_query_async(user_query, session_id))
-    
-    def get_memory_context(self, session_id: str) -> str:
-        """Get conversation memory for session"""
-        if session_id not in self.conversation_memory:
-            return "No previous conversation."
-        
-        memory = self.conversation_memory[session_id]
-        context_parts = []
-        
-        # Use last 10 exchanges (20 turns) for better context
-        for exchange in memory[-10:]:
-            context_parts.append(f"User: {exchange['user']}")
-            context_parts.append(f"Assistant: {exchange['assistant']}")
-        
-        return "\n".join(context_parts)
-    
-    def update_memory(self, session_id: str, user_query: str, response: str):
-        """Update conversation memory with automatic summarization"""
-        if session_id not in self.conversation_memory:
-            self.conversation_memory[session_id] = []
-        
-        self.conversation_memory[session_id].append({
-            'user': user_query,
-            'assistant': response
-        })
-        
-        # When reaching 20 exchanges, summarize and compact
-        if len(self.conversation_memory[session_id]) >= 20:
-            self._compact_memory(session_id)
-    
-    def _compact_memory(self, session_id: str):
-        """Compact memory by summarizing older conversations"""
-        memory = self.conversation_memory[session_id]
-        
-        # Take first 15 exchanges for summarization, keep last 5
-        old_conversations = memory[:-5]
-        recent_conversations = memory[-5:]
-        
-        # Create summary of old conversations
-        conversation_text = ""
-        for exchange in old_conversations:
-            conversation_text += f"User: {exchange['user']}\nAssistant: {exchange['assistant']}\n\n"
-        
-        try:
-            # Use OpenAI to summarize
-            summary_response = self.client.chat.completions.create(
-                model="gpt-3.5-turbo",
-                messages=[{
-                    "role": "user", 
-                    "content": f"Please provide a concise summary of this conversation history, focusing on key topics discussed and important information shared:\n\n{conversation_text}"
-                }],
-                max_tokens=200
-            )
-            
-            summary = summary_response.choices[0].message.content
-            
-            # Replace old conversations with summary
-            self.conversation_memory[session_id] = [
-                {'user': '[Previous conversation summary]', 'assistant': summary}
-            ] + recent_conversations
-            
-        except Exception as e:
-            # Fallback: just keep recent conversations
-            self.conversation_memory[session_id] = recent_conversations
 
 # Main agent class for the application
 OpenAIAgent = OpenAIAgentSDK
