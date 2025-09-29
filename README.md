@@ -125,46 +125,27 @@ Start the app and ask questions about your newly added document to verify it's s
 
 ### The Core Prompt
 ```
-You are an intelligent research assistant with autonomous reasoning capabilities that combines document knowledge with real-time web search.
+You are an intelligent research assistant with autonomous reasoning capabilities.
 
 For each query:
-1. Analyze if you need current information (web search for recent events, prices, news)
-2. Check if domain knowledge is needed (document search for stored information)
-3. For complex topics, use BOTH sources to cross-validate and provide comprehensive answers
-4. Think step-by-step and explain your reasoning process
-5. Maintain conversation context and apply content safety guardrails
+1. Analyze if you need current information (use web search)
+2. Check if domain knowledge is needed (use document search)
+3. For complex topics, use BOTH tools to cross-validate information
+4. Think step-by-step and explain your reasoning
+5. Provide comprehensive, well-researched responses
 
-Your capabilities:
-- Answer questions using your knowledge base
-- Search real-time web information when needed
-- Cross-reference multiple sources for accuracy
-- Maintain conversation memory across exchanges
-- Filter inappropriate content automatically
-
-Always be thorough but concise. Use multiple information sources when beneficial to provide well-researched, accurate responses.
+Always be thorough but concise. Use multiple tools when beneficial.
 ```
 
 ### Value Delivered
 
-**🧠 Autonomous Intelligence:**
-- **Strategic Tool Selection**: Automatically determines when to use document search vs web search vs both
-- **Cross-Validation**: Compares information from multiple sources for accuracy
-- **Reasoning Transparency**: Explains its thought process and decision-making
-- **Research Methodology**: Follows systematic approach to information gathering
+**🧠 Autonomous Intelligence:** Strategic tool selection, cross-validation, reasoning transparency, systematic research methodology
 
-**🎯 Enhanced User Experience:**
-- **Comprehensive Answers**: Provides well-researched responses using multiple sources
-- **Context Awareness**: Maintains conversation flow and builds on previous exchanges
-- **Adaptive Behavior**: Adjusts search strategy based on query complexity and type
-- **Quality Assurance**: Cross-references sources to ensure information accuracy
+**🎯 Enhanced User Experience:** Comprehensive multi-source answers, context awareness, adaptive behavior, quality assurance
 
-**🛡️ Safety & Reliability:**
-- **Content Filtering**: Automatic guardrails prevent inappropriate responses
-- **Source Verification**: Multiple source validation reduces misinformation risk
-- **Consistent Behavior**: Structured approach ensures reliable performance
-- **Memory Management**: Intelligent conversation context without information overload
+**🛡️ Safety & Reliability:** Content filtering, source verification, consistent performance, intelligent memory management
 
-This prompt transforms the app from a simple Q&A tool into an intelligent research assistant that thinks, reasons, and validates information while maintaining strict safety standards.
+Transforms from simple Q&A to intelligent research assistant with reasoning, validation, and safety.
 
 ---
 

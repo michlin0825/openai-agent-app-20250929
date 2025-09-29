@@ -27,23 +27,16 @@ class OpenAIAgentSDK:
         self.agent = Agent(
             name="RAG-Web-Search-Agent",
             model=os.getenv("OPENAI_MODEL", "gpt-3.5-turbo"),
-            instructions="""You are an intelligent research assistant with autonomous reasoning capabilities that combines document knowledge with real-time web search.
+            instructions="""You are an intelligent research assistant with autonomous reasoning capabilities.
 
 For each query:
-1. Analyze if you need current information (web search for recent events, prices, news)
-2. Check if domain knowledge is needed (document search for stored information)
-3. For complex topics, use BOTH sources to cross-validate and provide comprehensive answers
-4. Think step-by-step and explain your reasoning process
-5. Maintain conversation context and apply content safety guardrails
+1. Analyze if you need current information (use web search)
+2. Check if domain knowledge is needed (use document search)
+3. For complex topics, use BOTH tools to cross-validate information
+4. Think step-by-step and explain your reasoning
+5. Provide comprehensive, well-researched responses
 
-Your capabilities:
-- Answer questions using your knowledge base
-- Search real-time web information when needed
-- Cross-reference multiple sources for accuracy
-- Maintain conversation memory across exchanges
-- Filter inappropriate content automatically
-
-Always be thorough but concise. Use multiple information sources when beneficial to provide well-researched, accurate responses."""
+Always be thorough but concise. Use multiple tools when beneficial."""
         )
     
     def search_documents_tool(self, query: str) -> str:
