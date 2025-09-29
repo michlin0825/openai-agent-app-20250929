@@ -18,7 +18,7 @@ This intelligent chatbot combines **document knowledge** with **real-time web se
 
 ---
 
-## 🚀 Setup & Installation
+## 🚀 Quick Start
 
 ### 1. Environment Setup
 ```bash
@@ -89,7 +89,7 @@ python -c "from pdf_processor import setup_chromadb; collection = setup_chromadb
 **Step 4: Test document search**
 Start the app and ask questions about your newly added document to verify it's searchable.
 
-### Troubleshooting Document Ingestion
+**Troubleshooting Document Ingestion:**
 - **"File not found"**: Check the file path is correct and accessible
 - **"No chunks ingested"**: PDF might be image-based or corrupted - try a different PDF
 - **"Import error"**: Ensure virtual environment is activated and dependencies installed
@@ -112,7 +112,7 @@ Start the app and ask questions about your newly added document to verify it's s
 
 ---
 
-## Tech Stack
+## 🛠️ Tech Stack
 
 **Core Framework:**
 - **Python 3.x** + **Chainlit** - Chat interface framework
@@ -179,7 +179,7 @@ sequenceDiagram
     end
 ```
 
-## 🔍 Key Implementation Details
+## 🔍 Implementation Details
 
 ### OpenAI Agents SDK with Intelligent Tool Routing
 ```python
@@ -415,26 +415,24 @@ class OpenAIAgentSDK:
 
 ## 🔧 Troubleshooting
 
-### Common Issues & Solutions
+### Common Issues
 
-#### Application Issues
+**Application Issues:**
 - **ChromaDB Empty**: Run `python ingest_documents.py` to load documents
-- **Streaming Not Working**: Check nest-asyncio installation and async event loop
 - **Authentication Failed**: Verify CHAINLIT_USERNAME and CHAINLIT_PASSWORD in `.env`
 - **API Errors**: Confirm OPENAI_API_KEY and TAVILY_API_KEY are valid
-- **Module Import Errors**: Ensure all modules (memory_manager.py, guardrails.py) are in the same directory
+- **Module Import Errors**: Ensure all modules are in the same directory and venv is activated
 
-#### Memory Management Issues
+**Memory & Performance:**
 - **Memory Not Persisting**: Check if session_id is consistent across requests
 - **Compaction Not Working**: Verify OpenAI API key for summarization calls
-- **Memory Overflow**: Check if max_exchanges limit is properly configured (default: 20)
+- **Streaming Issues**: Check nest-asyncio installation and async event loop
 
-#### Guardrails Issues
+**Content Safety:**
 - **Taiwan Politics Not Blocked**: Verify keywords in GuardrailsManager.taiwan_politics_keywords
 - **Moderation API Failing**: Check OpenAI API key and moderation endpoint access
-- **False Positives**: Review and adjust keyword patterns in guardrails.py
 
-#### Debug Commands
+### Debug Commands
 ```bash
 # Check ChromaDB contents
 python -c "from pdf_processor import setup_chromadb; collection = setup_chromadb(); print(f'Documents: {collection.count()}')"
@@ -478,5 +476,5 @@ Note: venv/ directory will be created when you run the installation commands
 
 ---
 
-## License
+## 📜 License
 MIT License - Feel free to use and modify for your projects!
