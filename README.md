@@ -145,7 +145,12 @@ Always be thorough but concise. Use multiple tools when beneficial.
 
 **🛡️ Safety & Reliability:** Content filtering, source verification, consistent performance, intelligent memory management
 
-Transforms from simple Q&A to intelligent research assistant with reasoning, validation, and safety.
+This enhancement transforms the agent from basic Q&A to intelligent research assistant with:
+- Multi-tool coordination for cross-validated information
+- Step-by-step reasoning with transparent logic  
+- Autonomous decision making for intelligent processing
+- Comprehensive research delivering higher accuracy
+- Built-in guardrails ensuring safe and appropriate responses
 
 ---
 
