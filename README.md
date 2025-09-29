@@ -422,6 +422,8 @@ python -c "from memory_manager import MemoryManager; from guardrails import Guar
 
 ```
 openai-agent-app-20250929/
+├── .chainlit/                      # Chainlit configuration
+│   └── config.toml                 # UI customization (removes footer message)
 ├── README.md                        # Project documentation
 ├── REFACTORING_SUMMARY.md           # Detailed refactoring changes
 ├── DOCUMENTATION_VALIDATION.md      # Documentation accuracy report
