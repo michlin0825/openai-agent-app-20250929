@@ -55,7 +55,48 @@ Access at `http://localhost:8000` with your configured credentials.
 
 **Note**: Requires Chainlit 2.8.0+ for Python 3.13 compatibility (already in requirements.txt).
 
-### Try These Sample Questions
+---
+
+## 📄 Document Management
+
+### Current Documents
+The app comes pre-loaded with the **Amazon 2023 Shareholder Letter** (46 document chunks) in ChromaDB. These documents are preserved between sessions.
+
+### Adding New Documents
+
+**Step 1: Prepare your PDF**
+- Ensure your PDF is text-based (not scanned images)
+- Place the PDF file in an accessible location
+
+**Step 2: Ingest the document**
+```bash
+# Activate virtual environment first
+source venv/bin/activate  # On Windows: venv\Scripts\activate
+
+# Ingest a single PDF document
+python ingest_documents.py path/to/your_document.pdf
+
+# Example:
+python ingest_documents.py ~/Downloads/my_report.pdf
+```
+
+**Step 3: Verify ingestion**
+```bash
+# Check how many documents are now in the database
+python -c "from pdf_processor import setup_chromadb; collection = setup_chromadb(); print(f'Total documents: {collection.count()}')"
+```
+
+**Step 4: Test document search**
+Start the app and ask questions about your newly added document to verify it's searchable.
+
+### Troubleshooting Document Ingestion
+- **"File not found"**: Check the file path is correct and accessible
+- **"No chunks ingested"**: PDF might be image-based or corrupted - try a different PDF
+- **"Import error"**: Ensure virtual environment is activated and dependencies installed
+
+---
+
+## 💬 Usage Examples
 
 **Document Queries** (Amazon 2023 Shareholder Letter):
 - *"What did Amazon say about AI in 2023?"*
@@ -396,45 +437,6 @@ openai-agent-app-20250929/
 
 Note: venv/ directory will be created when you run the installation commands
 ```
-
----
-
-## 📄 Document Management
-
-### Current Documents
-The app comes pre-loaded with the **Amazon 2023 Shareholder Letter** (46 document chunks) in ChromaDB. These documents are preserved between sessions.
-
-### Adding New Documents
-
-**Step 1: Prepare your PDF**
-- Ensure your PDF is text-based (not scanned images)
-- Place the PDF file in an accessible location
-
-**Step 2: Ingest the document**
-```bash
-# Activate virtual environment first
-source venv/bin/activate  # On Windows: venv\Scripts\activate
-
-# Ingest a single PDF document
-python ingest_documents.py path/to/your_document.pdf
-
-# Example:
-python ingest_documents.py ~/Downloads/my_report.pdf
-```
-
-**Step 3: Verify ingestion**
-```bash
-# Check how many documents are now in the database
-python -c "from pdf_processor import setup_chromadb; collection = setup_chromadb(); print(f'Total documents: {collection.count()}')"
-```
-
-**Step 4: Test document search**
-Start the app and ask questions about your newly added document to verify it's searchable.
-
-### Troubleshooting Document Ingestion
-- **"File not found"**: Check the file path is correct and accessible
-- **"No chunks ingested"**: PDF might be image-based or corrupted - try a different PDF
-- **"Import error"**: Ensure virtual environment is activated and dependencies installed
 
 ---
 
