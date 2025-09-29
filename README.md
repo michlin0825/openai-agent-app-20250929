@@ -137,14 +137,6 @@ For each query:
 Always be thorough but concise. Use multiple tools when beneficial.
 ```
 
-### Value Delivered
-
-**Autonomous Intelligence:** Smart tool routing, cross-validation, step-by-step reasoning, comprehensive research
-
-**Enhanced User Experience:** Multi-source answers, conversation context, adaptive responses, thorough analysis  
-
-**Safety & Reliability:** Content guardrails, source verification, consistent behavior, intelligent memory
-
 ---
 
 ## 🛠️ Tech Stack
